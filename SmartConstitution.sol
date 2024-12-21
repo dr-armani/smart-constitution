@@ -2,22 +2,22 @@
 pragma solidity ^0.8.0;
 
 contract SmartConstitution {
-    uint256 public constant RANDOM_VOTERS = 1000; // between 1000 and 2000 random voters initially
-    uint256 public constant MIN_VOTES = 500;
+    uint32 public constant RANDOM_VOTERS = 1000; // between 1000 and 2000 random voters initially
+    uint32 public constant MIN_VOTES = 500;
 
     uint256 public constant REGISTRATION_DURATION = 2 weeks;
     uint256 public constant REGISTRATION_FEE = 1 ether / 1000;
 
     uint8 public constant TOTAL_MEMBERS = 50;
     uint8 constant MEDIAN_MEMBER = uint8(TOTAL_MEMBERS / 2);
-    uint256 public constant SUPER_MAJORITY = 30;
+    uint8 public constant SUPER_MAJORITY = 30;
     uint256 public constant LEADER_PERIOD = 1 weeks;
 
     uint256 public constant SUBMISSION_FEE = 1 ether / 1000;
-    uint256 public constant MINIMUM_PROPOSALS = 10;
+    uint8 public constant MINIMUM_PROPOSALS = 10;
 
-    uint256 public constant VOTER_BATCH = 10;
-    uint256 public constant MINIMUM_VOTERS = 1_000_000;
+    uint32 public constant VOTER_BATCH = 10;
+    uint32 public constant MINIMUM_VOTERS = 1_000_000;
 
     uint256 public constant GOVERNANCE_LENGTH = 10 weeks;
 
@@ -60,16 +60,17 @@ contract SmartConstitution {
         uint256 withdrawnAt;
         uint8 yesVotes;
         Payment[] payments;
-        mapping(address => uint256) memberVotedAt;
+        //mapping(address => uint256) memberVotedAt;
     }
     Bill[] public bills; // bills[0] is the transitional constitution.
     mapping(address => uint256) public activeBillByMember; // 0 if no active bill, otherwise billId
+    mapping(address => mapping(uint256 => uint256)) public memberVotedAt;
 
     struct ConstitutionProposal {
         string description; // Brief description or title
         string constitutionText; // Full text of the constitution
         string implementationCode; // Optional computer implementation
-        string proposerIndentity; // Name/pseudonym/org/group
+        string proposerIdentity; // Name/pseudonym/org/group
         bytes32 hashedOffChain; // Hash of above four fields
         string supportingMaterials; // IPFS hash for supporting files (PDF, video, etc.)
         uint256 submittedAt; // Time of submission
@@ -79,11 +80,11 @@ contract SmartConstitution {
     uint256 public proposalCount;
     ConstitutionProposal[] public constitutionProposals;
 
-    mapping(bytes23 => address[2]) private registrarVoterHashes; // The registrar for each voter hash
+    mapping(bytes32 => address[2]) private registrarVoterHashes; // The registrar for each voter hash
     mapping(address => uint256) private referendumVotingTime;
     // 0:not registered, 1:registered by 1 registrar, 2: registered by 2 regisrtars, >1:voted at timestamp
 
-    uint16 public referendumVoterCount;
+    uint32 public referendumVoterCount;
 
     uint256 public referendumEndTime;
     uint256 public ratifiedConstitutionId;
@@ -91,7 +92,7 @@ contract SmartConstitution {
     uint256 public currentRate;
     struct InterestPeriod {
         uint256 rate; // Interest rate in basis points
-        uint256 startTime; // When this rate becomes effective
+        uint256 startedAt; // When this rate becomes effective
     }
     InterestPeriod[] public interestPeriods;
 
@@ -113,17 +114,14 @@ contract SmartConstitution {
         randomizerAddress = _randomizerAddress;
         startTime = block.timestamp;
         electionEnd = startTime + REGISTRATION_DURATION + 1;
+        Bill storage _bill = bills.push();
 
-        bills.push(
-            Bill({
-                proposer: msg.sender,
-                provisions: _provisions,
-                proposedAt: startTime,
-                executedAt: startTime,
-                withdrawnAt: 0,
-                yesVotes: TOTAL_MEMBERS
-            })
-        );
+        _bill.proposer = msg.sender;
+        _bill.provisions = _provisions;
+        _bill.proposedAt = startTime;
+        _bill.executedAt = startTime;
+        _bill.withdrawnAt = 0;
+        _bill.yesVotes = TOTAL_MEMBERS;
     }
 
     enum Phase {
@@ -350,14 +348,12 @@ contract SmartConstitution {
         );
         activeBillByMember[msg.sender] = bills.length;
 
-        bills.push(
-            Bill({
-                proposer: msg.sender,
-                provisions: _provisions,
-                proposedAt: block.timestamp,
-                payments: _payments
-            })
-        );
+        Bill storage _bill = bills.push();
+
+        _bill.proposer = msg.sender;
+        _bill.provisions = _provisions;
+        _bill.proposedAt = block.timestamp;
+        _bill.payments = _payments; 
 
         emit BillProposed(bills.length, msg.sender, _provisions);
         return bills.length;
@@ -378,14 +374,17 @@ contract SmartConstitution {
 
         Bill storage bill = bills[billId];
         require(bill.withdrawnAt == 0, "Bill withdrawn");
-        require(!bill.memberVotedAt[msg.sender], "Already voted");
+        //require(bill.memberVotedAt[msg.sender]==0, "Already voted");
+        //bill.memberVotedAt[msg.sender] = block.timestamp;
 
-        bill.memberVotedAt[msg.sender] = block.timestamp;
+        require(memberVotedAt[msg.sender][billId]==0, "Already voted");
+        memberVotedAt[msg.sender][billId] = block.timestamp;
+
         bill.yesVotes++;
 
         emit BillVoted(billId, msg.sender);
 
-        if (bill.yesVotes >= SUPER_MAJORITY && !bill.executedAt) {
+        if (bill.yesVotes >= SUPER_MAJORITY && bill.executedAt == 0) {
             emit BillPassed(billId);
             bill.executedAt = block.timestamp;
             activeBillByMember[bill.proposer] = 0;
@@ -402,8 +401,8 @@ contract SmartConstitution {
         require(billId < bills.length, "Invalid bill ID");
         Bill storage bill = bills[billId];
         require(bill.proposer == msg.sender, "Only the proposer can withdraw");
-        require(!bill.executedAt, "Bill already executed");
-        require(!bill.withdrawnAt, "Bill already withdrawn");
+        require(bill.executedAt == 0, "Bill already executed");
+        require(bill.withdrawnAt == 0, "Bill already withdrawn");
 
         bill.withdrawnAt = block.timestamp;
         activeBillByMember[msg.sender] = 0;
@@ -416,14 +415,14 @@ contract SmartConstitution {
     function _executeBill(uint256 billId) internal {
         Bill storage bill = bills[billId];
         for (uint256 i; i < bill.payments.length; i++) {
-            Payment storage payment = bill.payments[i];
+            Payment memory payment = bill.payments[i];
             payable(payment.recipient).transfer(payment.amount);
         }
     }
 
     function getBillInfo(uint256 billId) external view returns (Bill memory) {
         require(billId < bills.length, "Invalid bill ID");
-        return bills[billId];
+        return bills[billId]; 
     }
 
     function getVotingTimeBill(uint256 billId, address memberAddress)
@@ -433,7 +432,9 @@ contract SmartConstitution {
     {
         require(billId < bills.length, "Invalid bill ID");
         require(candidateInfo[memberAddress].electedMember, "Not a Member");
-        return bills[billId].memberVotedAt[memberAddress];
+        // return bills[billId].memberVotedAt[memberAddress];
+
+        return memberVotedAt[memberAddress][billId];
     }
 
     function getMemberActiveBill(address memberAddress)
@@ -492,7 +493,7 @@ contract SmartConstitution {
     );
 
     function getConstitution(uint256 proposalId)
-        external
+        public
         view
         returns (ConstitutionProposal memory)
     {
@@ -503,9 +504,9 @@ contract SmartConstitution {
         return constitutionProposals[proposalId];
     }
 
-    mapping(address => uint256) registrars;
-
     // members can hire and fire registrars
+    mapping(address => bool) registrars;
+
     // Registrars are randomly assigned to voters.
     // offchain/frontend: voterHashes[i] = hash(FirstName+LastName+DoB(YYYY/MM/DD)+SSN)
     function registerVoterBatch(
@@ -554,14 +555,13 @@ contract SmartConstitution {
 
     // Multiple Registrars required for registration
 
-    function getRegistrar4VoterHash(bytes32 voterHash)
-        public
-        returns (address)
+    function getRegistrarsOfHash(bytes32 voterHash) external
+        returns (address[2] memory)
     {
         return registrarVoterHashes[voterHash];
     }
 
-    function getVoterStatus(address voterAddress) public returns (uint256) {
+    function getVoterStatus(address voterAddress) external returns (uint256) {
         return referendumVotingTime[voterAddress];
     }
 
@@ -619,7 +619,8 @@ contract SmartConstitution {
         external
         returns (uint256, ConstitutionProposal memory)
     {
-        if (ratifiedConstitutionId > 0) return ratifiedConstitutionId;
+        if (ratifiedConstitutionId > 0) 
+        return (ratifiedConstitutionId, getConstitution(ratifiedConstitutionId));
 
         require(
             referendumEndTime > 0 && referendumEndTime < block.timestamp,
@@ -672,7 +673,7 @@ contract SmartConstitution {
         uint256 oldRate;
         uint8 oldRank = memberRank[msg.sender];
 
-        if (!oldRank && sortedRates[oldRank].member != msg.sender) {
+        if (oldRank == 0 && sortedRates[oldRank].member != msg.sender) {
             numberOfRates++;
             oldRate = 0;
         } else {
@@ -732,13 +733,12 @@ contract SmartConstitution {
     //   receive() external payable {
     function lend() public payable {
         Loan memory newLoan = Loan({
-            amount: msg.value,
+            amount: int256(msg.value),
             timestamp: block.timestamp
         });
 
         loansByLender[msg.sender].push(newLoan);
-        emit LoanReceived(msg.sender, msg.value);
+        emit LoanReceived(msg.sender, int256(msg.value));
     }
-
-    event LoanReceived(address indexed lender, uint256 amount);
+    event LoanReceived(address indexed lender, int256 amount);
 }
