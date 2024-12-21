@@ -78,7 +78,13 @@ contract SmartConstitution {
 
     uint256 public proposalCount;
     ConstitutionProposal[] public constitutionProposals;
+
+    mapping(bytes23 => address[2]) private registrarVoterHashes; // The registrar for each voter hash  
+    mapping(address => uint256) private referendumVotingTime; 
+    // 0:not registered, 1:registered by 1 registrar, 2: registered by 2 regisrtars, >1:voted at timestamp
     
+    uint16 public referendumVoterCount;
+
     uint256 public referendumEndTime;
     uint256 public ratifiedConstitutionId;
 
@@ -94,7 +100,7 @@ contract SmartConstitution {
     InterestPeriod[] public interestPeriods;
 
     struct Loan {
-        uint256 amount;
+        int256 amount;
         uint256 timestamp;
     }
     mapping(address => Loan[]) public loansByLender;
@@ -238,23 +244,20 @@ contract SmartConstitution {
         for (uint i = 0; i < _candidatesIds.length; i++) {
             uint256 _candidateId = _candidatesIds[i];
             require(_candidateId < candidateList.length, "Wrong candidate index");
-
-            if (!votedFor[_candidateId]) {
-                votedFor[_candidateId] = true; 
-                candidateInfo[candidateList[_candidateId]].voteCount++;
-                // voter2Candidates[msg.sender].push(_candidateId); 
-            }
+            require(!votedFor[_candidateId], "Repetitive candidate index"); 
+            votedFor[_candidateId] = true; 
+            candidateInfo[candidateList[_candidateId]].voteCount++;
+            // voter2Candidates[msg.sender].push(_candidateId); 
         }
     }
     event VoteCast(address indexed voter); 
  
     function getElectionResults() public returns (address[TOTAL_MEMBERS] memory) {
-        require(block.timestamp > electionEnd,"Call after election");
 
         if(membersElected){
             return electedMembers;
         }
-
+        require(block.timestamp > electionEnd,"Call after election");
         unchecked {
             for (uint i = 1; i <= TOTAL_MEMBERS; i++) {
                 for (uint j = 0; j < candidateList.length - i; j++) {
@@ -413,19 +416,14 @@ contract SmartConstitution {
     }
     event ConstitutionProposalSubmitted(uint256 indexed proposalId, ConstitutionProposal proposal);
 
-    function getProposedConstitution(uint256 calldata proposalId) external view 
-        returns (Bill memory)
+    function getConstitution(uint256 proposalId) external view 
+        returns (ConstitutionProposal memory)
     {
         require(proposalId < constitutionProposals.length, "Invalid constitution proposal ID");
         return constitutionProposals[proposalId];
     }
     
     // members can hire and fire registrars
-
-    mapping(bytes23 => address[2]) private registrarVoterHashes; // The registrar for each voter hash  
-    mapping(address => uint256) private referendumVotingTime; // 0:not voter, 1:can vote, >1:voted at timestamp
-    uint16 public referendumVoterCount;
-
     // Registrars are randomly assigned to voters. 
     // offchain/frontend: voterHashes[i] = hash(FirstName+LastName+DoB(YYYY/MM/DD)+SSN) 
     function registerVoterBatch( 
@@ -470,15 +468,12 @@ contract SmartConstitution {
         return referendumVotingTime[voterAddress]; 
     }
 
-    uint256 public referendumEndTime;
-    uint256 public ratifiedConstitutionId;
-
     function startReferendum() public {
         require(
             electionEnd + GOVERNANCE_LENGTH < block.timestamp,
             "Cannot start referendum yet"
         );
-
+        require(ratifiedConstitutionId == 0, "Already ratified a constitution");
         require(constitutionProposals.length > MINIMUM_PROPOSALS, "Not enough proposals");
         require(referendumVoterCount >= MINIMUM_VOTERS, "Not enough voters");
         referendumEndTime = block.timestamp + 1 days;
@@ -487,81 +482,64 @@ contract SmartConstitution {
     }
     event ReferendumStarted();
 
-    function voteInReferendum(uint256[] calldata _proposals) public {
+    function voteInReferendum(uint256[] calldata _proposals) external {
         require(block.timestamp < referendumEndTime, "Not in Referendum time");
-        require(_proposals.length <= constitutionProposals.length, "Invalid vote count");
+        require(_proposals.length <= constitutionProposals.length, "Invalid proposal list");
         require(
             referendumVotingTime[msg.sender] == 2,
-            "Already voted or not registered"
-        );
+            "Voted or Not registered enough times"
+        ); 
 
         bool[] memory votedForProposal = new bool[](constitutionProposals.length);
 
         for (uint i = 0; i < _proposals.length; i++) {
             uint256 _proposalId = _proposals[i];
             require(_proposalId < constitutionProposals.length, "Invalid proposal");
-
-            if (!votedForProposal[_proposalId]) {
-                votedForProposal[_proposalId] = true;
-                constitutionProposals[_proposalId].voteCount++;
-            }
+            require(!votedForProposal[_proposalId], "Repetitive proposalId");
+            votedForProposal[_proposalId] = true;
+            constitutionProposals[_proposalId].voteCount++; 
         }
 
         referendumVotingTime[msg.sender] = block.timestamp;
-        emit ReferendumVoteCast(msg.sender, _proposals);
+        emit ReferendumVoteCast(msg.sender);
     }
-    event ReferendumVoteCast(address indexed voter, uint256[] constitutionProposals);
+    event ReferendumVoteCast(address indexed voter);
 
-    function countVotesReferendum() public returns (uint256) {
+    function getReferendumResults() external returns (uint256, ConstitutionProposal memory) {
+        if (ratifiedConstitutionId > 0) return ratifiedConstitutionId; 
+
         require(
             referendumEndTime > 0 && referendumEndTime < block.timestamp,
             "Call once after Referendum"
         );
 
-        if (ratifiedConstitutionId > 0) return ratifiedConstitutionId;
-
-        uint256 winningProposalId;
-        uint256 maxVotes = 0;
+        uint256 _winningProposalId;
+        uint256 _maxVotes = 0;
 
         for (uint i = 0; i < constitutionProposals.length; i++) {
             if (constitutionProposals[i].voteCount > maxVotes) {
-                maxVotes = constitutionProposals[i].voteCount;
-                winningProposalId = i;
+                _maxVotes = constitutionProposals[i].voteCount;
+                _winningProposalId = i;
             }
         }
 
-        ratifiedConstitutionId = winningProposalId;
+        ratifiedConstitutionId = _winningProposalId;
 
-        ConstitutionProposal memory winner = constitutionProposals[winningProposalId];
+        ConstitutionProposal memory ratifiedConstitution = constitutionProposals[winningProposalId];
 
-        emit ConstitutionRatified(
-            winningProposalId,
-            winner.description,
-            winner.constitutionText,
-            winner.implementationCode,
-            winner.proposerIdentity,
-            winner.supportingMaterials,
-            maxVotes
-        );
+        emit ConstitutionRatified(winningProposalId, ratifiedConstitution);
 
-        return winningProposalId;
+        return (winningProposalId, ratifiedConstitution); 
     }
     event ConstitutionRatified(
-        uint256 indexed winningProposalId,
-        string description,
-        string constitutionText,
-        string implementationCode,
-        string proposerIdentity,
-        string supportingMaterials,
-        uint256 voteCount
-    );
+        uint256 indexed winningProposalId, 
+        ConstitutionProposal ratifiedConstitution);
 
     /**
      * @notice Returns contract balance
      * @dev The contract balance is publicly visible on-chain
      * @return balance Current contract balance
      */
-
     function treasuryReserve() public view returns (uint256) {
         return address(this).balance;
     }
@@ -625,9 +603,11 @@ contract SmartConstitution {
         uint256 newRate, 
         uint8 newRank
     );
+
     event InterestRateUpdated(uint256 newMedianRate); 
+
     //   receive() external payable {
-    function lend() external payable {
+    function lend() public payable {
         Loan memory newLoan = Loan({
             amount: msg.value,
             timestamp: block.timestamp
