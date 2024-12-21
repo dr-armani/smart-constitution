@@ -346,14 +346,20 @@ contract SmartConstitution {
             activeBillByMember[msg.sender] == 0,
             "Member already has an active bill"
         );
-        activeBillByMember[msg.sender] = bills.length;
 
-        Bill storage _bill = bills.push();
+        uint256 billId = bills.length;
+        activeBillByMember[msg.sender] = billId;
+        
+        bills.push(); // Push empty bill first
+        Bill storage newBill = bills[billId];
 
-        _bill.proposer = msg.sender;
-        _bill.provisions = _provisions;
-        _bill.proposedAt = block.timestamp;
-        _bill.payments = _payments; 
+        newBill.proposer = msg.sender;
+        newBill.provisions = _provisions;
+        newBill.proposedAt = block.timestamp;
+        // Copy payments array
+        for(uint256 i = 0; i < _payments.length; i++) {
+            newBill.payments.push(_payments[i]);
+        }
 
         emit BillProposed(bills.length, msg.sender, _provisions);
         return bills.length;
@@ -555,13 +561,14 @@ contract SmartConstitution {
 
     // Multiple Registrars required for registration
 
-    function getRegistrarsOfHash(bytes32 voterHash) external
+    function getRegistrarsOfHash(bytes32 voterHash) external view
         returns (address[2] memory)
     {
-        return registrarVoterHashes[voterHash];
+        return registrarVoterHashes[voterHash]; 
     }
 
-    function getVoterStatus(address voterAddress) external returns (uint256) {
+    function getVoterStatus(address voterAddress) external view 
+    returns (uint256) {
         return referendumVotingTime[voterAddress];
     }
 
