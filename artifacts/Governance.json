@@ -1,0 +1,607 @@
+{
+	"deploy": {
+		"VM:-": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"main:1": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"ropsten:3": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"rinkeby:4": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"kovan:42": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"goerli:5": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"Custom": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		}
+	},
+	"data": {
+		"bytecode": {
+			"functionDebugData": {},
+			"generatedSources": [],
+			"linkReferences": {},
+			"object": "",
+			"opcodes": "",
+			"sourceMap": ""
+		},
+		"deployedBytecode": {
+			"functionDebugData": {},
+			"generatedSources": [],
+			"immutableReferences": {},
+			"linkReferences": {},
+			"object": "",
+			"opcodes": "",
+			"sourceMap": ""
+		},
+		"gasEstimates": null,
+		"methodIdentifiers": {
+			"N_MEMBERS()": "e292bf16",
+			"RANDOM_VOTERS()": "3def77b7",
+			"REG_TIME()": "47f7b722",
+			"SUPER_MAJORITY()": "b85c2292",
+			"activeBillByMember(address)": "198ccd2c",
+			"bills(uint256)": "28bdcde8",
+			"candidateInfo(address)": "e965b7c9",
+			"candidateList(uint256)": "b13c744b",
+			"electionEnd()": "ce7ea161",
+			"getBillInfo(uint256)": "52f61b05",
+			"getCurrentPhase()": "a3a40ea5",
+			"getMemberActiveBill(address)": "8e0ca5ad",
+			"getVotingTimeBill(uint256,address)": "d9688f03",
+			"memberVotedAt(address,uint256)": "2190bee8",
+			"proposeBill(string,(uint256,address,string)[])": "5e8523a9",
+			"randomizer()": "f10fb584",
+			"referendumEndTime()": "b0feb260",
+			"startTime()": "78e97925",
+			"voteForBill(uint256)": "5bd03e9d",
+			"withdrawBill(uint256)": "58e1cbee"
+		}
+	},
+	"abi": [
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "billId",
+					"type": "uint256"
+				}
+			],
+			"name": "BillPassed",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "billId",
+					"type": "uint256"
+				},
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "proposer",
+					"type": "address"
+				},
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "provisions",
+					"type": "string"
+				}
+			],
+			"name": "BillProposed",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "billId",
+					"type": "uint256"
+				},
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "voter",
+					"type": "address"
+				}
+			],
+			"name": "BillVoted",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "uint256",
+					"name": "billId",
+					"type": "uint256"
+				}
+			],
+			"name": "BillWithdrawn",
+			"type": "event"
+		},
+		{
+			"inputs": [],
+			"name": "N_MEMBERS",
+			"outputs": [
+				{
+					"internalType": "uint8",
+					"name": "",
+					"type": "uint8"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "RANDOM_VOTERS",
+			"outputs": [
+				{
+					"internalType": "uint32",
+					"name": "",
+					"type": "uint32"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "REG_TIME",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "SUPER_MAJORITY",
+			"outputs": [
+				{
+					"internalType": "uint8",
+					"name": "",
+					"type": "uint8"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"name": "activeBillByMember",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "bills",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "proposer",
+					"type": "address"
+				},
+				{
+					"internalType": "string",
+					"name": "provisions",
+					"type": "string"
+				},
+				{
+					"internalType": "uint256",
+					"name": "proposedAt",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "executedAt",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "withdrawnAt",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint8",
+					"name": "yesVotes",
+					"type": "uint8"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"name": "candidateInfo",
+			"outputs": [
+				{
+					"internalType": "string",
+					"name": "fullName",
+					"type": "string"
+				},
+				{
+					"internalType": "string",
+					"name": "bio",
+					"type": "string"
+				},
+				{
+					"internalType": "string",
+					"name": "website",
+					"type": "string"
+				},
+				{
+					"internalType": "uint256",
+					"name": "registeredAt",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "voteCount",
+					"type": "uint256"
+				},
+				{
+					"internalType": "bool",
+					"name": "electedMember",
+					"type": "bool"
+				},
+				{
+					"internalType": "uint256",
+					"name": "leaderAt",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "candidateList",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "electionEnd",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "billId",
+					"type": "uint256"
+				}
+			],
+			"name": "getBillInfo",
+			"outputs": [
+				{
+					"components": [
+						{
+							"internalType": "address",
+							"name": "proposer",
+							"type": "address"
+						},
+						{
+							"internalType": "string",
+							"name": "provisions",
+							"type": "string"
+						},
+						{
+							"internalType": "uint256",
+							"name": "proposedAt",
+							"type": "uint256"
+						},
+						{
+							"internalType": "uint256",
+							"name": "executedAt",
+							"type": "uint256"
+						},
+						{
+							"internalType": "uint256",
+							"name": "withdrawnAt",
+							"type": "uint256"
+						},
+						{
+							"internalType": "uint8",
+							"name": "yesVotes",
+							"type": "uint8"
+						},
+						{
+							"components": [
+								{
+									"internalType": "uint256",
+									"name": "amount",
+									"type": "uint256"
+								},
+								{
+									"internalType": "address",
+									"name": "recipient",
+									"type": "address"
+								},
+								{
+									"internalType": "string",
+									"name": "reason",
+									"type": "string"
+								}
+							],
+							"internalType": "struct Payment[]",
+							"name": "payments",
+							"type": "tuple[]"
+						}
+					],
+					"internalType": "struct Bill",
+					"name": "",
+					"type": "tuple"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "getCurrentPhase",
+			"outputs": [
+				{
+					"internalType": "enum Phase",
+					"name": "",
+					"type": "uint8"
+				}
+			],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "memberAddress",
+					"type": "address"
+				}
+			],
+			"name": "getMemberActiveBill",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "billId",
+					"type": "uint256"
+				},
+				{
+					"internalType": "address",
+					"name": "memberAddress",
+					"type": "address"
+				}
+			],
+			"name": "getVotingTimeBill",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				},
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "memberVotedAt",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "string",
+					"name": "_provisions",
+					"type": "string"
+				},
+				{
+					"components": [
+						{
+							"internalType": "uint256",
+							"name": "amount",
+							"type": "uint256"
+						},
+						{
+							"internalType": "address",
+							"name": "recipient",
+							"type": "address"
+						},
+						{
+							"internalType": "string",
+							"name": "reason",
+							"type": "string"
+						}
+					],
+					"internalType": "struct Payment[]",
+					"name": "_payments",
+					"type": "tuple[]"
+				}
+			],
+			"name": "proposeBill",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "randomizer",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "referendumEndTime",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "startTime",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "billId",
+					"type": "uint256"
+				}
+			],
+			"name": "voteForBill",
+			"outputs": [
+				{
+					"internalType": "uint8",
+					"name": "",
+					"type": "uint8"
+				}
+			],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "billId",
+					"type": "uint256"
+				}
+			],
+			"name": "withdrawBill",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		}
+	]
+}

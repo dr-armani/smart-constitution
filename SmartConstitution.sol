@@ -1,113 +1,54 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+enum Phase {
+    Registration, // Days 1-14: Candidate and voter registration
+    Election, // 1 Day: Voting for the transitional government
+    Governance, // 10 weeks: Collecting constitution proposals
+    Referendum, // 1 Day: Referendum day
+    Ratification // New Constitution Ratified
+}
+
+struct Candidate {
+    string fullName;
+    string bio;
+    string website;
+    uint256 registeredAt;
+    uint256 voteCount;
+    bool electedMember; // true if they became one of the 50 members
+    uint256 leaderAt; // 0 if never led, otherwise the week number they led
+}
+
+struct Payment {
+    uint256 amount;
+    address recipient;
+    string reason;
+}
+
+struct Bill {
+    address proposer;
+    string provisions;
+    uint256 proposedAt;
+    uint256 executedAt;
+    uint256 withdrawnAt;
+    uint8 yesVotes;
+    Payment[] payments;
+    //mapping(address => uint256) memberVotedAt;
+}
+
 contract SmartConstitution {
-    uint32 public constant RANDOM_VOTERS = 1000; // between 1000 and 2000 random voters initially
+    uint32 public constant RANDOM_VOTERS = 1000; // between 1000 and 2000 random voters
     uint256 public constant REG_TIME = 2 weeks;
-    uint256 public constant REG_FEE = 1 ether / 1000;
-
     uint8 public constant N_MEMBERS = 50;
-    uint8 constant MEDIAN_MEMBER = uint8(N_MEMBERS / 2);
-    uint8 public constant SUPER_MAJORITY = 30;
-    uint256 public constant LEAD_PERIOD = 1 weeks;
-
-    uint256 public constant SUBMISSION_FEE = 1 ether / 1000;
-    uint8 public constant MIN_PROPOSALS = 10;
-
-    uint32 public constant VOTER_BATCH = 10;
-    uint32 public constant MIN_VOTERS = 1_000_000;
-
-    uint256 public constant GOV_LENGTH = 10 weeks;
-
-    address public randomizer; // Address of the international oversight agent to find random voters.
-
     uint256 public immutable startTime;
     uint256 public electionEnd;
-
-    mapping(bytes32 => bool) private isVoterHash; // Random voter hash
-    mapping(address => uint256) private voteTime; // 0:not registered, 1:registered, >1:voted at timestamp
+    address public randomizer; // Address of the international oversight agent to find random voters.
     uint32 addedVoterCount;
-
-    struct Candidate {
-        string fullName;
-        string bio;
-        string website;
-        uint256 registeredAt;
-        uint256 voteCount;
-        bool electedMember; // true if they became one of the 50 members
-        uint256 leaderAt; // 0 if never led, otherwise the week number they led
-    }
+    address[] public candidateList;
+    Bill[] public bills; // bills[0] is the transitional constitution.
+    uint256 public referendumEndTime;
 
     mapping(address => Candidate) public candidateInfo;
-    address[] public candidateList;
-    address[N_MEMBERS] private electedMembers;
-    bool public membersElected = false;
-
-    address public currentLeaderAddress;
-    uint256 public currentLeaderNumber; // 1 to 50 representing position from highest voted
-
-    struct Payment {
-        uint256 amount;
-        address recipient;
-        string reason;
-    }
-    struct Bill {
-        address proposer;
-        string provisions;
-        uint256 proposedAt;
-        uint256 executedAt;
-        uint256 withdrawnAt;
-        uint8 yesVotes;
-        Payment[] payments;
-        //mapping(address => uint256) memberVotedAt;
-    }
-    Bill[] public bills; // bills[0] is the transitional constitution.
-    mapping(address => uint256) public activeBillByMember; // 0 if no active bill, otherwise billId
-    mapping(address => mapping(uint256 => uint256)) public memberVotedAt;
-
-    struct ConstitutionProposal {
-        string description; // Brief description or title
-        string constitutionText; // Full text of the constitution
-        string implementationCode; // Optional computer implementation
-        string proposerIdentity; // Name/pseudonym/org/group
-        bytes32 hashedOffChain; // Hash of above four fields
-        string supportingMaterials; // IPFS hash for supporting files (PDF, video, etc.)
-        uint256 submittedAt; // Time of submission
-        uint256 voteCount; // Number of people voted for this proposal
-    }
-
-    uint256 public proposalCount;
-    ConstitutionProposal[] public constitutionProposals;
-
-    mapping(bytes32 => address[2]) private registrarsVoter; // The registrars for each voter hash
-    mapping(address => uint256) private referendumVotingTime;
-    // 0:not registered, 1:registered once, 2: registered twice, >2:voted at timestamp
-
-    uint32 public referendumVoterCount;
-
-    uint256 public referendumEndTime;
-    uint256 public ratifiedConstitutionId;
-
-    uint256 public currentRate;
-    struct InterestPeriod {
-        uint256 rate; // Interest rate in basis points
-        uint256 startedAt; // When this rate becomes effective
-    }
-    InterestPeriod[] public interestPeriods;
-
-    struct Txn {
-        int256 amount;
-        uint256 timestamp;
-    }
-    mapping(address => Txn[]) public LenderTxns;
-
-    struct MemberRate {
-        address member;
-        uint256 rate;
-    }
-    MemberRate[N_MEMBERS] public sortedRates;
-    mapping(address => uint8) public memberRank;
-    uint8 public numberOfRates = 0;
 
     constructor(address _randomizer, string memory _provisions) {
         randomizer = _randomizer;
@@ -121,14 +62,6 @@ contract SmartConstitution {
         _bill.executedAt = startTime;
         _bill.withdrawnAt = 0;
         _bill.yesVotes = N_MEMBERS;
-    }
-
-    enum Phase {
-        Registration, // Days 1-14: Candidate and voter registration
-        Election, // 1 Day: Voting for the transitional government
-        Governance, // 10 weeks: Collecting constitution proposals
-        Referendum, // 1 Day: Referendum day
-        Ratification // New Constitution Ratified
     }
 
     function getCurrentPhase() public returns (Phase) {
@@ -148,13 +81,28 @@ contract SmartConstitution {
         else return Phase.Ratification;
         // else return Phase.Restart
     }
+}
+
+abstract contract InitialVoting is SmartConstitution {
+    uint256 public constant LEAD_PERIOD = 1 weeks;
+    uint256 public constant REG_FEE = 1 ether / 1000;
+    uint32 public constant VOTER_BATCH = 10;
+
+    mapping(bytes32 => bool) private isVoterHash; // Random voter hash
+    mapping(address => uint256) private voteTime; // 0:not registered, 1:registered, >1:voted at timestamp
+
+    address[N_MEMBERS] private electedMembers;
+    bool public membersElected = false;
+    
+    address public currentLeaderAddress;
+    uint256 public currentLeaderNumber; // 1 to 50 representing position from highest voted
+
 
     // offchain/frontend: voterHashes[i] = hash(FirstName+LastName+DoB(YYYY/MM/DD)+SSN)
     // JavaScript:
     // const crypto = require('crypto');
     // const input = firstName + lastName + dob + ssn;
     // const hash = crypto.createHash('sha256').update(input).digest('hex');
-
     function addVoter(
         bytes32[VOTER_BATCH] calldata voterHashes, // 10 voter hashes in any order
         address[VOTER_BATCH] calldata voterAddresses // 10 voter addresses in any order
@@ -338,12 +286,11 @@ contract SmartConstitution {
         emit ElectionResults(electedMembers, currentLeaderAddress);
         return electedMembers;
     }
-
     event ElectionResults(
         address[N_MEMBERS] indexed electedMembers,
         address firstLeader
     );
-
+        
     function changeLeader() public {
         require(
             block.timestamp >=
@@ -361,8 +308,15 @@ contract SmartConstitution {
         candidateInfo[currentLeaderAddress].leaderAt = block.timestamp;
         emit LeadershipChanged(currentLeaderAddress);
     }
-
     event LeadershipChanged(address indexed newLeader);
+
+}
+
+abstract contract Governance is SmartConstitution{
+    uint8 public constant SUPER_MAJORITY = 30;
+
+    mapping(address => uint256) public activeBillByMember; // 0 if no active bill, otherwise billId
+    mapping(address => mapping(uint256 => uint256)) public memberVotedAt;
 
     function proposeBill(
         string calldata _provisions,
@@ -395,7 +349,6 @@ contract SmartConstitution {
         emit BillProposed(bills.length, msg.sender, _provisions);
         return bills.length;
     }
-
     event BillProposed(
         uint256 indexed billId,
         address indexed proposer,
@@ -430,7 +383,6 @@ contract SmartConstitution {
 
         return bill.yesVotes;
     }
-
     event BillVoted(uint256 indexed billId, address indexed voter);
     event BillPassed(uint256 indexed billId);
 
@@ -446,7 +398,6 @@ contract SmartConstitution {
 
         emit BillWithdrawn(billId);
     }
-
     event BillWithdrawn(uint256 indexed billId);
 
     function _executeBill(uint256 billId) internal {
@@ -479,6 +430,35 @@ contract SmartConstitution {
         require(candidateInfo[memberAddress].electedMember, "Not a Member");
         return activeBillByMember[memberAddress];
     }
+}
+
+abstract contract Referendum is SmartConstitution{
+    uint256 public constant GOV_LENGTH = 10 weeks;
+    uint256 public constant SUBMISSION_FEE = 1 ether / 1000;
+    uint8 public constant MIN_PROPOSALS = 10;
+    uint32 public constant MIN_VOTERS = 1_000_000;
+
+    struct ConstitutionProposal {
+        string description; // Brief description or title
+        string constitutionText; // Full text of the constitution
+        string implementationCode; // Optional computer implementation
+        string proposerIdentity; // Name/pseudonym/org/group
+        bytes32 hashedOffChain; // Hash of above four fields
+        string supportingMaterials; // IPFS hash for supporting files (PDF, video, etc.)
+        uint256 submittedAt; // Time of submission
+        uint256 voteCount; // Number of people voted for this proposal
+    }
+
+    uint256 public proposalCount;
+    ConstitutionProposal[] public constitutionProposals;
+
+    mapping(bytes32 => address[2]) private registrarsVoter; // The registrars for each voter hash
+    mapping(address => uint256) private referendumVotingTime;
+    // 0:not registered, 1:registered once, 2: registered twice, >2:voted at timestamp
+
+    uint32 public referendumVoterCount;
+
+    uint256 public ratifiedConstitutionId;
 
     function proposeConstitution(
         ConstitutionProposal memory _proposal
@@ -536,6 +516,7 @@ contract SmartConstitution {
     }
 
     // members can hire and fire registrars
+    uint32 public constant REF_VOTER_BATCH = 10;
     uint256 public constant MAX_APPROVALS = 1000;
     int256 public constant REQUIRED_SCORE = 10;
 
@@ -566,8 +547,8 @@ contract SmartConstitution {
     // Registrars are randomly assigned to voters.
     // offchain/frontend: voterHashes[i] = hash(FirstName+LastName+DoB(YYYY/MM/DD)+SSN)
     function registerVoterBatch(
-        bytes32[VOTER_BATCH] calldata voterHashes, // 10 voter hashes in any order
-        address[VOTER_BATCH] calldata voterAddresses // 10 voter addresses in any order
+        bytes32[REF_VOTER_BATCH] calldata voterHashes, // 10 voter hashes in any order
+        address[REF_VOTER_BATCH] calldata voterAddresses // 10 voter addresses in any order
     ) public {
         require(
             registrarScore[msg.sender] >= REQUIRED_SCORE,
@@ -575,13 +556,13 @@ contract SmartConstitution {
         );
         require(getCurrentPhase() == Phase.Governance, "Wrong phase");
         require(
-            voterHashes.length == VOTER_BATCH &&
-                voterAddresses.length == VOTER_BATCH,
+            voterHashes.length == REF_VOTER_BATCH &&
+                voterAddresses.length == REF_VOTER_BATCH,
             "Incorrect batch size"
         );
 
         // Check all hashes are new
-        for (uint8 i = 0; i < VOTER_BATCH; i++) {
+        for (uint8 i = 0; i < REF_VOTER_BATCH; i++) {
             if (registrarsVoter[voterHashes[i]][0] == address(0)) {
                 registrarsVoter[voterHashes[i]][0] = msg.sender;
             } else if (registrarsVoter[voterHashes[i]][1] == address(0)) {
@@ -592,7 +573,7 @@ contract SmartConstitution {
         }
 
         // Enable voting for all addresses
-        for (uint8 i = 0; i < VOTER_BATCH; i++) {
+        for (uint8 i = 0; i < REF_VOTER_BATCH; i++) {
             require(voterAddresses[i] != address(0), "Invalid voter address");
             require(
                 referendumVotingTime[voterAddresses[i]] < 2,
@@ -601,12 +582,12 @@ contract SmartConstitution {
             referendumVotingTime[voterAddresses[i]]++;
         }
 
-        referendumVoterCount += VOTER_BATCH;
+        referendumVoterCount += REF_VOTER_BATCH;
 
         emit VoterRegistered(voterAddresses, msg.sender, referendumVoterCount);
     }
     event VoterRegistered(
-        address[VOTER_BATCH] indexed voter,
+        address[REF_VOTER_BATCH] indexed voter,
         address registrar,
         uint256 referendumVoterCount
     );
@@ -714,6 +695,31 @@ contract SmartConstitution {
         uint256 indexed winningProposalId,
         ConstitutionProposal ratifiedConstitution
     );
+}
+
+abstract contract Financial is SmartConstitution{
+    uint8 constant MEDIAN_MEMBER = uint8(N_MEMBERS / 2);
+
+    uint256 public currentRate;
+    struct InterestPeriod {
+        uint256 rate; // Interest rate in basis points
+        uint256 startedAt; // When this rate becomes effective
+    }
+    InterestPeriod[] public interestPeriods;
+
+    struct Txn {
+        int256 amount;
+        uint256 timestamp;
+    }
+    mapping(address => Txn[]) public LenderTxns;
+
+    struct MemberRate {
+        address member;
+        uint256 rate;
+    }
+    MemberRate[N_MEMBERS] public sortedRates;
+    mapping(address => uint8) public memberRank;
+    uint8 public numberOfRates = 0;
 
     /**
      * @notice Returns contract balance
