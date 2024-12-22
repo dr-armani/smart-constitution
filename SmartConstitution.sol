@@ -3,30 +3,29 @@ pragma solidity ^0.8.0;
 
 contract SmartConstitution {
     uint32 public constant RANDOM_VOTERS = 1000; // between 1000 and 2000 random voters initially
-    uint32 public constant MIN_VOTES = 500;
+    uint256 public constant REG_TIME = 2 weeks;
+    uint256 public constant REG_FEE = 1 ether / 1000;
 
-    uint256 public constant REGISTRATION_DURATION = 2 weeks;
-    uint256 public constant REGISTRATION_FEE = 1 ether / 1000;
-
-    uint8 public constant TOTAL_MEMBERS = 50;
-    uint8 constant MEDIAN_MEMBER = uint8(TOTAL_MEMBERS / 2);
+    uint8 public constant N_MEMBERS = 50;
+    uint8 constant MEDIAN_MEMBER = uint8(N_MEMBERS / 2);
     uint8 public constant SUPER_MAJORITY = 30;
-    uint256 public constant LEADER_PERIOD = 1 weeks;
+    uint256 public constant LEAD_PERIOD = 1 weeks;
 
     uint256 public constant SUBMISSION_FEE = 1 ether / 1000;
-    uint8 public constant MINIMUM_PROPOSALS = 10;
+    uint8 public constant MIN_PROPOSALS = 10;
 
     uint32 public constant VOTER_BATCH = 10;
-    uint32 public constant MINIMUM_VOTERS = 1_000_000;
+    uint32 public constant MIN_VOTERS = 1_000_000;
 
-    uint256 public constant GOVERNANCE_LENGTH = 10 weeks;
+    uint256 public constant GOV_LENGTH = 10 weeks;
 
-    address public randomizerAddress; // Address of the international oversight agent to find random voters.
+    address public randomizer; // Address of the international oversight agent to find random voters.
 
     uint256 public immutable startTime;
     uint256 public electionEnd;
 
-    mapping(address => uint256) private initialVotingTime; // 0:not voter, 1:can vote, >1:voted at timestamp
+    mapping(bytes32 => bool) private isVoterHash; // Random voter hash
+    mapping(address => uint256) private voteTime; // 0:not registered, 1:registered, >1:voted at timestamp
     uint16 addedVoterCount;
 
     struct Candidate {
@@ -41,7 +40,7 @@ contract SmartConstitution {
 
     mapping(address => Candidate) public candidateInfo;
     address[] public candidateList;
-    address[TOTAL_MEMBERS] private electedMembers;
+    address[N_MEMBERS] private electedMembers;
     bool public membersElected = false;
 
     address public currentLeaderAddress;
@@ -80,9 +79,9 @@ contract SmartConstitution {
     uint256 public proposalCount;
     ConstitutionProposal[] public constitutionProposals;
 
-    mapping(bytes32 => address[2]) private registrarVoterHashes; // The registrar for each voter hash
+    mapping(bytes32 => address[2]) private registrarsVoter; // The registrars for each voter hash
     mapping(address => uint256) private referendumVotingTime;
-    // 0:not registered, 1:registered by 1 registrar, 2: registered by 2 regisrtars, >1:voted at timestamp
+    // 0:not registered, 1:registered once, 2: registered twice, >2:voted at timestamp
 
     uint32 public referendumVoterCount;
 
@@ -106,14 +105,14 @@ contract SmartConstitution {
         address member;
         uint256 rate;
     }
-    MemberRate[TOTAL_MEMBERS] public sortedRates;
+    MemberRate[N_MEMBERS] public sortedRates;
     mapping(address => uint8) public memberRank;
     uint8 public numberOfRates = 0;
 
-    constructor(address _randomizerAddress, string memory _provisions) {
-        randomizerAddress = _randomizerAddress;
+    constructor(address _randomizer, string memory _provisions) {
+        randomizer = _randomizer;
         startTime = block.timestamp;
-        electionEnd = startTime + REGISTRATION_DURATION + 1;
+        electionEnd = startTime + REG_TIME + 1;
         Bill storage _bill = bills.push();
 
         _bill.proposer = msg.sender;
@@ -121,7 +120,7 @@ contract SmartConstitution {
         _bill.proposedAt = startTime;
         _bill.executedAt = startTime;
         _bill.withdrawnAt = 0;
-        _bill.yesVotes = TOTAL_MEMBERS;
+        _bill.yesVotes = N_MEMBERS;
     }
 
     enum Phase {
@@ -136,11 +135,11 @@ contract SmartConstitution {
         if (block.timestamp < electionEnd - 1 days) return Phase.Registration;
         else if (block.timestamp < electionEnd)
             if (
-                candidateList.length < 2 * TOTAL_MEMBERS ||
+                candidateList.length < 2 * N_MEMBERS ||
                 addedVoterCount < RANDOM_VOTERS
             ) {
                 // Postpone election for two weeks if fewer than 100 candidates or fewer than 1000 voters
-                electionEnd = electionEnd + REGISTRATION_DURATION;
+                electionEnd = electionEnd + REG_TIME;
                 return Phase.Registration;
             } else return Phase.Election;
         else if (referendumEndTime == 0) return Phase.Governance;
@@ -150,8 +149,24 @@ contract SmartConstitution {
         // else return Phase.Restart
     }
 
-    function addVoter(address voter) public {
-        require(msg.sender == randomizerAddress, "Not authorized randomizer");
+    function volunteer() external {
+        require(
+            getCurrentPhase() == Phase.Registration,
+            "Not in registration phase"
+        );
+    }
+
+    // offchain/frontend: voterHashes[i] = hash(FirstName+LastName+DoB(YYYY/MM/DD)+SSN)
+    // JavaScript:
+    // const crypto = require('crypto');
+    // const input = firstName + lastName + dob + ssn;
+    // const hash = crypto.createHash('sha256').update(input).digest('hex');
+
+    function addVoter(
+        bytes32[VOTER_BATCH] calldata voterHashes, // 10 voter hashes in any order
+        address[VOTER_BATCH] calldata voterAddresses // 10 voter addresses in any order
+    ) public {
+        require(msg.sender == randomizer, "Not authorized randomizer");
         require(
             getCurrentPhase() == Phase.Registration,
             "Voter adding period has ended."
@@ -160,19 +175,49 @@ contract SmartConstitution {
             addedVoterCount <= 2 * RANDOM_VOTERS,
             "Maximum number of voters reached."
         );
-        require(voter != address(0), "Invalid voter address");
         require(
-            initialVotingTime[voter] == 0,
-            "Address is already added as a voter"
+            voterHashes.length == VOTER_BATCH &&
+                voterAddresses.length == VOTER_BATCH,
+            "Incorrect batch size"
         );
 
-        initialVotingTime[voter] = 1;
-        addedVoterCount++;
+        // Check all hashes are new
+        for (uint8 i = 0; i < VOTER_BATCH; i++) {
+            require(
+                !isVoterHash[voterHashes[i]],
+                "Voter hash already registered"
+            );
+            isVoterHash[voterHashes[i]] = true;
+        }
 
-        emit VoterAdded(voter, addedVoterCount);
+        // Enable voting for all addresses
+        for (uint8 i = 0; i < VOTER_BATCH; i++) {
+            require(voterAddresses[i] != address(0), "Invalid voter address");
+            require(
+                voteTime[voterAddresses[i]] == 0,
+                "Addresss already registered. Registrar ERROR!"
+            );
+            voteTime[voterAddresses[i]] = 1;
+        }
+
+        addedVoterCount += VOTER_BATCH;
+
+        emit VoterAdded(voterAddresses, addedVoterCount);
+    }
+    event VoterAdded(
+        address[VOTER_BATCH] indexed voter,
+        uint256 addedVoterCount
+    );
+
+    function getHashStatus(
+        bytes32 voterHash
+    ) external view returns (bool memory) {
+        return isVoterHash[voterHash];
     }
 
-    event VoterAdded(address indexed voter, uint256 addedVoterCount);
+    function getVoteTime(address voterAddress) external view returns (uint256) {
+        return voteTime[voterAddress];
+    }
 
     /**
      * @notice Register as a candidate with required information
@@ -199,7 +244,7 @@ contract SmartConstitution {
             "Invalid website"
         );
         require(msg.sender != address(0), "Invalid sender");
-        require(msg.value >= REGISTRATION_FEE, "Insufficient registration fee");
+        require(msg.value >= REG_FEE, "Insufficient registration fee");
         require(
             getCurrentPhase() == Phase.Registration,
             "Candidate registration period has ended."
@@ -229,11 +274,9 @@ contract SmartConstitution {
         string website
     );
 
-    function getCandidateInfo(uint256 candidateID)
-        external
-        view
-        returns (Candidate memory)
-    {
+    function getCandidateInfo(
+        uint256 candidateID
+    ) external view returns (Candidate memory) {
         require(candidateID < candidateList.length, "Invalid Candidate ID");
         return candidateInfo[candidateList[candidateID]];
     }
@@ -270,16 +313,13 @@ contract SmartConstitution {
 
     event VoteCast(address indexed voter);
 
-    function getElectionResults()
-        public
-        returns (address[TOTAL_MEMBERS] memory)
-    {
+    function getElectionResults() public returns (address[N_MEMBERS] memory) {
         if (membersElected) {
             return electedMembers;
         }
         require(block.timestamp > electionEnd, "Call after election");
         unchecked {
-            for (uint256 i = 1; i <= TOTAL_MEMBERS; i++) {
+            for (uint256 i = 1; i <= N_MEMBERS; i++) {
                 for (uint256 j = 0; j < candidateList.length - i; j++) {
                     if (
                         candidateInfo[candidateList[j]].voteCount >
@@ -316,7 +356,7 @@ contract SmartConstitution {
     function changeLeader() public {
         require(
             block.timestamp >=
-                candidateInfo[currentLeaderAddress].leaderAt + LEADER_PERIOD,
+                candidateInfo[currentLeaderAddress].leaderAt + LEAD_PERIOD,
             "Current leader's term not finished"
         );
 
@@ -349,7 +389,7 @@ contract SmartConstitution {
 
         uint256 billId = bills.length;
         activeBillByMember[msg.sender] = billId;
-        
+
         bills.push(); // Push empty bill first
         Bill storage newBill = bills[billId];
 
@@ -357,7 +397,7 @@ contract SmartConstitution {
         newBill.provisions = _provisions;
         newBill.proposedAt = block.timestamp;
         // Copy payments array
-        for(uint256 i = 0; i < _payments.length; i++) {
+        for (uint256 i = 0; i < _payments.length; i++) {
             newBill.payments.push(_payments[i]);
         }
 
@@ -383,7 +423,7 @@ contract SmartConstitution {
         //require(bill.memberVotedAt[msg.sender]==0, "Already voted");
         //bill.memberVotedAt[msg.sender] = block.timestamp;
 
-        require(memberVotedAt[msg.sender][billId]==0, "Already voted");
+        require(memberVotedAt[msg.sender][billId] == 0, "Already voted");
         memberVotedAt[msg.sender][billId] = block.timestamp;
 
         bill.yesVotes++;
@@ -428,14 +468,13 @@ contract SmartConstitution {
 
     function getBillInfo(uint256 billId) external view returns (Bill memory) {
         require(billId < bills.length, "Invalid bill ID");
-        return bills[billId]; 
+        return bills[billId];
     }
 
-    function getVotingTimeBill(uint256 billId, address memberAddress)
-        external
-        view
-        returns (uint256)
-    {
+    function getVotingTimeBill(
+        uint256 billId,
+        address memberAddress
+    ) external view returns (uint256) {
         require(billId < bills.length, "Invalid bill ID");
         require(candidateInfo[memberAddress].electedMember, "Not a Member");
         // return bills[billId].memberVotedAt[memberAddress];
@@ -443,19 +482,16 @@ contract SmartConstitution {
         return memberVotedAt[memberAddress][billId];
     }
 
-    function getMemberActiveBill(address memberAddress)
-        external
-        view
-        returns (uint256)
-    {
+    function getMemberActiveBill(
+        address memberAddress
+    ) external view returns (uint256) {
         require(candidateInfo[memberAddress].electedMember, "Not a Member");
         return activeBillByMember[memberAddress];
     }
 
-    function proposeConstitution(ConstitutionProposal memory _proposal)
-        public
-        payable
-    {
+    function proposeConstitution(
+        ConstitutionProposal memory _proposal
+    ) public payable {
         require(getCurrentPhase() == Phase.Governance, "Wrong phase");
         require(
             bytes(_proposal.description).length > 0,
@@ -498,11 +534,9 @@ contract SmartConstitution {
         ConstitutionProposal proposal
     );
 
-    function getConstitution(uint256 proposalId)
-        public
-        view
-        returns (ConstitutionProposal memory)
-    {
+    function getConstitution(
+        uint256 proposalId
+    ) public view returns (ConstitutionProposal memory) {
         require(
             proposalId < constitutionProposals.length,
             "Invalid constitution proposal ID"
@@ -511,15 +545,43 @@ contract SmartConstitution {
     }
 
     // members can hire and fire registrars
-    mapping(address => bool) registrars;
+    uint256 public constant MAX_APPROVALS = 1000;
+    int256 public constant REQUIRED_SCORE = 10;
 
+    mapping(address => mapping(address => int8)) public memberRegistrar; // member => registrar => vote (-1, 0, 1)
+    mapping(address => int256) public registrarScore; // registrar => (approvals - disapprovals)
+    mapping(address => uint256) public memberApprovalCount; // count of +1 votes per member
+
+    function approveRegistrar(address registrar, int8 vote) public {
+        require(candidateInfo[msg.sender].electedMember, "Not a member");
+        require(vote >= -1 && vote <= 1, "Vote must be -1, 0, or 1");
+
+        int8 oldVote = memberRegistrar[msg.sender][registrar];
+        if (oldVote == 0 && vote != 0) {
+            require(
+                memberApprovalCount[msg.sender] < MAX_APPROVALS,
+                "Max votes reached"
+            );
+            memberApprovalCount[msg.sender]++;
+        } else if (oldVote != 0 && vote == 0) {
+            memberApprovalCount[msg.sender]--;
+        }
+
+        memberRegistrar[msg.sender][registrar] = vote;
+        registrarScore[registrar] += (vote - oldVote);
+    }
+
+    // Multiple Registrars required for registration
     // Registrars are randomly assigned to voters.
     // offchain/frontend: voterHashes[i] = hash(FirstName+LastName+DoB(YYYY/MM/DD)+SSN)
     function registerVoterBatch(
         bytes32[VOTER_BATCH] calldata voterHashes, // 10 voter hashes in any order
         address[VOTER_BATCH] calldata voterAddresses // 10 voter addresses in any order
     ) public {
-        require(registrars[msg.sender], "Not authorized registrar");
+        require(
+            registrarScore[msg.sender] >= REQUIRED_SCORE,
+            "Not enough approval"
+        );
         require(getCurrentPhase() == Phase.Governance, "Wrong phase");
         require(
             voterHashes.length == VOTER_BATCH &&
@@ -529,10 +591,10 @@ contract SmartConstitution {
 
         // Check all hashes are new
         for (uint8 i = 0; i < VOTER_BATCH; i++) {
-            if (registrarVoterHashes[voterHashes[i]][0] == address(0)) {
-                registrarVoterHashes[voterHashes[i]][0] = msg.sender;
-            } else if (registrarVoterHashes[voterHashes[i]][1] == address(0)) {
-                registrarVoterHashes[voterHashes[i]][1] = msg.sender;
+            if (registrarsVoter[voterHashes[i]][0] == address(0)) {
+                registrarsVoter[voterHashes[i]][0] = msg.sender;
+            } else if (registrarsVoter[voterHashes[i]][1] == address(0)) {
+                registrarsVoter[voterHashes[i]][1] = msg.sender;
             } else {
                 revert("Voter hash already registered.");
             }
@@ -552,37 +614,35 @@ contract SmartConstitution {
 
         emit VoterRegistered(voterAddresses, msg.sender, referendumVoterCount);
     }
-
     event VoterRegistered(
         address[VOTER_BATCH] indexed voter,
         address registrar,
         uint256 referendumVoterCount
     );
 
-    // Multiple Registrars required for registration
-
-    function getRegistrarsOfHash(bytes32 voterHash) external view
-        returns (address[2] memory)
-    {
-        return registrarVoterHashes[voterHash]; 
+    function getRegistrarsOfHash(
+        bytes32 voterHash
+    ) external view returns (address[2] memory) {
+        return registrarsVoter[voterHash];
     }
 
-    function getVoterStatus(address voterAddress) external view 
-    returns (uint256) {
+    function getVoterStatus(
+        address voterAddress
+    ) external view returns (uint256) {
         return referendumVotingTime[voterAddress];
     }
 
     function startReferendum() public {
         require(
-            electionEnd + GOVERNANCE_LENGTH < block.timestamp,
+            electionEnd + GOV_LENGTH < block.timestamp,
             "Cannot start referendum yet"
         );
         require(ratifiedConstitutionId == 0, "Already ratified a constitution");
         require(
-            constitutionProposals.length > MINIMUM_PROPOSALS,
+            constitutionProposals.length > MIN_PROPOSALS,
             "Not enough proposals"
         );
-        require(referendumVoterCount >= MINIMUM_VOTERS, "Not enough voters");
+        require(referendumVoterCount >= MIN_VOTERS, "Not enough voters");
         referendumEndTime = block.timestamp + 1 days;
 
         emit ReferendumStarted();
@@ -626,8 +686,11 @@ contract SmartConstitution {
         external
         returns (uint256, ConstitutionProposal memory)
     {
-        if (ratifiedConstitutionId > 0) 
-        return (ratifiedConstitutionId, getConstitution(ratifiedConstitutionId));
+        if (ratifiedConstitutionId > 0)
+            return (
+                ratifiedConstitutionId,
+                getConstitution(ratifiedConstitutionId)
+            );
 
         require(
             referendumEndTime > 0 && referendumEndTime < block.timestamp,
