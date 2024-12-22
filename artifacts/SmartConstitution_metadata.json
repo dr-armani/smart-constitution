@@ -9,7 +9,7 @@
 				"inputs": [
 					{
 						"internalType": "address",
-						"name": "_randomizerAddress",
+						"name": "_randomizer",
 						"type": "address"
 					},
 					{
@@ -382,9 +382,9 @@
 				"inputs": [
 					{
 						"indexed": true,
-						"internalType": "address",
+						"internalType": "address[10]",
 						"name": "voter",
-						"type": "address"
+						"type": "address[10]"
 					},
 					{
 						"indexed": false,
@@ -423,7 +423,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "GOVERNANCE_LENGTH",
+				"name": "GOV_LENGTH",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -436,7 +436,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "LEADER_PERIOD",
+				"name": "LEAD_PERIOD",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -449,7 +449,20 @@
 			},
 			{
 				"inputs": [],
-				"name": "MINIMUM_PROPOSALS",
+				"name": "MAX_APPROVALS",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "MIN_PROPOSALS",
 				"outputs": [
 					{
 						"internalType": "uint8",
@@ -462,7 +475,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "MINIMUM_VOTERS",
+				"name": "MIN_VOTERS",
 				"outputs": [
 					{
 						"internalType": "uint32",
@@ -475,12 +488,12 @@
 			},
 			{
 				"inputs": [],
-				"name": "MIN_VOTES",
+				"name": "N_MEMBERS",
 				"outputs": [
 					{
-						"internalType": "uint32",
+						"internalType": "uint8",
 						"name": "",
-						"type": "uint32"
+						"type": "uint8"
 					}
 				],
 				"stateMutability": "view",
@@ -501,7 +514,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "REGISTRATION_DURATION",
+				"name": "REG_FEE",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -514,12 +527,25 @@
 			},
 			{
 				"inputs": [],
-				"name": "REGISTRATION_FEE",
+				"name": "REG_TIME",
 				"outputs": [
 					{
 						"internalType": "uint256",
 						"name": "",
 						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "REQUIRED_SCORE",
+				"outputs": [
+					{
+						"internalType": "int256",
+						"name": "",
+						"type": "int256"
 					}
 				],
 				"stateMutability": "view",
@@ -541,19 +567,6 @@
 			{
 				"inputs": [],
 				"name": "SUPER_MAJORITY",
-				"outputs": [
-					{
-						"internalType": "uint8",
-						"name": "",
-						"type": "uint8"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "TOTAL_MEMBERS",
 				"outputs": [
 					{
 						"internalType": "uint8",
@@ -599,12 +612,35 @@
 			{
 				"inputs": [
 					{
-						"internalType": "address",
-						"name": "voter",
-						"type": "address"
+						"internalType": "bytes32[10]",
+						"name": "voterHashes",
+						"type": "bytes32[10]"
+					},
+					{
+						"internalType": "address[10]",
+						"name": "voterAddresses",
+						"type": "address[10]"
 					}
 				],
 				"name": "addVoter",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "registrar",
+						"type": "address"
+					},
+					{
+						"internalType": "int8",
+						"name": "vote",
+						"type": "int8"
+					}
+				],
+				"name": "approveRegistrar",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -1053,6 +1089,25 @@
 			{
 				"inputs": [
 					{
+						"internalType": "bytes32",
+						"name": "voterHash",
+						"type": "bytes32"
+					}
+				],
+				"name": "getHashStatus",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
 						"internalType": "address",
 						"name": "memberAddress",
 						"type": "address"
@@ -1143,6 +1198,25 @@
 						"internalType": "address[2]",
 						"name": "",
 						"type": "address[2]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "voterAddress",
+						"type": "address"
+					}
+				],
+				"name": "getVoteTime",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
 					}
 				],
 				"stateMutability": "view",
@@ -1259,12 +1333,55 @@
 						"type": "address"
 					}
 				],
+				"name": "memberApprovalCount",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
 				"name": "memberRank",
 				"outputs": [
 					{
 						"internalType": "uint8",
 						"name": "",
 						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "memberRegistrar",
+				"outputs": [
+					{
+						"internalType": "int8",
+						"name": "",
+						"type": "int8"
 					}
 				],
 				"stateMutability": "view",
@@ -1444,7 +1561,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "randomizerAddress",
+				"name": "randomizer",
 				"outputs": [
 					{
 						"internalType": "address",
@@ -1533,6 +1650,25 @@
 				"name": "registerVoterBatch",
 				"outputs": [],
 				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "registrarScore",
+				"outputs": [
+					{
+						"internalType": "int256",
+						"name": "",
+						"type": "int256"
+					}
+				],
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -1700,11 +1836,11 @@
 	},
 	"sources": {
 		"SmartConstitution.sol": {
-			"keccak256": "0x3d80ee01b886372f2be40585264482b1ae08465df263f61ee7b928dd98ce3583",
+			"keccak256": "0x8dc062e085e7084df7d0d42c616cf1a46c1c83085c02913506aa660e3365919a",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://b111e7e1d2cbaa97a2caca6799d2139152c5629654c5645ae0106af12471e578",
-				"dweb:/ipfs/QmaCyKpN8sfCubNk7GfNqVH22pXnXpowdQviXdwoovV1NE"
+				"bzz-raw://8d5434a1c292ce25bedfe89c6ef329694a18b2d970a51c10b2b36af625da4311",
+				"dweb:/ipfs/QmY4dgyAVcviRkHXV4i4xvsUe53QvC2BhB8fVv9Gs4884u"
 			]
 		}
 	},

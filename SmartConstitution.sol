@@ -26,7 +26,7 @@ contract SmartConstitution {
 
     mapping(bytes32 => bool) private isVoterHash; // Random voter hash
     mapping(address => uint256) private voteTime; // 0:not registered, 1:registered, >1:voted at timestamp
-    uint16 addedVoterCount;
+    uint32 addedVoterCount;
 
     struct Candidate {
         string fullName;
@@ -149,13 +149,6 @@ contract SmartConstitution {
         // else return Phase.Restart
     }
 
-    function volunteer() external {
-        require(
-            getCurrentPhase() == Phase.Registration,
-            "Not in registration phase"
-        );
-    }
-
     // offchain/frontend: voterHashes[i] = hash(FirstName+LastName+DoB(YYYY/MM/DD)+SSN)
     // JavaScript:
     // const crypto = require('crypto');
@@ -211,7 +204,7 @@ contract SmartConstitution {
 
     function getHashStatus(
         bytes32 voterHash
-    ) external view returns (bool memory) {
+    ) external view returns (bool) {
         return isVoterHash[voterHash];
     }
 
@@ -289,13 +282,13 @@ contract SmartConstitution {
             "Invalid vote count"
         );
         require(
-            initialVotingTime[msg.sender] == 1,
+            voteTime[msg.sender] == 1,
             "Already voted (>1) or not registered (0)"
         );
 
         bool[] memory votedFor = new bool[](candidateList.length);
 
-        initialVotingTime[msg.sender] = block.timestamp;
+        voteTime[msg.sender] = block.timestamp;
         emit VoteCast(msg.sender);
 
         for (uint256 i = 0; i < _candidatesIds.length; i++) {
@@ -349,7 +342,7 @@ contract SmartConstitution {
     }
 
     event ElectionResults(
-        address[TOTAL_MEMBERS] indexed electedMembers,
+        address[N_MEMBERS] indexed electedMembers,
         address firstLeader
     );
 
@@ -757,7 +750,7 @@ contract SmartConstitution {
         } else if (newRate > oldRate) {
             // Move rates down
             while (
-                newRank < TOTAL_MEMBERS - 1 &&
+                newRank < N_MEMBERS - 1 &&
                 newRate > sortedRates[newRank + 1].rate
             ) {
                 sortedRates[newRank] = sortedRates[newRank + 1];
