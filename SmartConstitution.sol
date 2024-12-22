@@ -95,11 +95,11 @@ contract SmartConstitution {
     }
     InterestPeriod[] public interestPeriods;
 
-    struct Loan {
+    struct Txn {
         int256 amount;
         uint256 timestamp;
     }
-    mapping(address => Loan[]) public loansByLender;
+    mapping(address => Txn[]) public LenderTxns;
 
     struct MemberRate {
         address member;
@@ -202,9 +202,7 @@ contract SmartConstitution {
         uint256 addedVoterCount
     );
 
-    function getHashStatus(
-        bytes32 voterHash
-    ) external view returns (bool) {
+    function getHashStatus(bytes32 voterHash) external view returns (bool) {
         return isVoterHash[voterHash];
     }
 
@@ -782,7 +780,6 @@ contract SmartConstitution {
             emit InterestRateUpdated(currentRate);
         }
     }
-
     event MemberRateChanged(
         address indexed member,
         uint256 oldRate,
@@ -790,18 +787,24 @@ contract SmartConstitution {
         uint256 newRate,
         uint8 newRank
     );
-
     event InterestRateUpdated(uint256 newMedianRate);
 
     //   receive() external payable {
-    function lend() public payable {
-        Loan memory newLoan = Loan({
+    function lend() external payable {
+        Txn memory newTxn = Txn({
             amount: int256(msg.value),
             timestamp: block.timestamp
         });
 
-        loansByLender[msg.sender].push(newLoan);
+        LenderTxns[msg.sender].push(newTxn);
         emit LoanReceived(msg.sender, int256(msg.value));
     }
     event LoanReceived(address indexed lender, int256 amount);
+
+    function getBalance() external view returns (int256 _sum) {
+        for (uint16 i; i < LenderTxns[msg.sender].length; i++) {
+            _sum += LenderTxns[msg.sender][i].amount;
+        }
+        return _sum;
+    }
 }
