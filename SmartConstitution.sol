@@ -8,7 +8,6 @@ enum Phase {
     Referendum, // 1 Day: Referendum day
     Ratification // New Constitution Ratified
 }
-
 struct Candidate {
     string fullName;
     string bio;
@@ -18,13 +17,11 @@ struct Candidate {
     bool electedMember; // true if they became one of the 50 members
     uint256 leaderAt; // 0 if never led, otherwise the week number they led
 }
-
 struct Payment {
     uint256 amount;
     address recipient;
     string reason;
 }
-
 struct Proposal {
     address proposer;
     string provisions;
@@ -43,11 +40,11 @@ contract SharedStorage {
     uint256 public immutable startTime;
     uint256 public electionEnd;
     address public neutral; // Address of the international oversight agent to find random voters
-    uint32 addedVoterCount;
+    uint32 public addedVoterCount;
     address[] public candidateList;
     mapping(address => Candidate) public candidateInfo;
 
-    Proposal[] public proposals; // proposals[0] is the transitional constitution.
+    Proposal[] public proposals; // proposals[0] is this transitional constitution.
     uint256 public referendumEndTime;
 
     function getCurrentPhase() public returns (Phase) {
@@ -62,31 +59,9 @@ contract SharedStorage {
                 return Phase.Registration;
             } else return Phase.Election;
         else if (referendumEndTime == 0) return Phase.Governance;
-        // membersElected
         else if (block.timestamp < referendumEndTime) return Phase.Referendum;
         else return Phase.Ratification;
         // else return Phase.Restart
-    }
-}
-
-contract SmartConstitution is SharedStorage {
-    constructor(address _neutral, string memory _provisions) {
-        neutral = _neutral;
-        startTime = block.timestamp;
-        electionEnd = startTime + REG_TIME + 1;
-        Proposal storage _proposal = proposals.push();
-
-        _proposal.proposer = msg.sender;
-        _proposal.provisions = _provisions;
-        _proposal.proposedAt = startTime;
-        _proposal.executedAt = startTime;
-        _proposal.withdrawnAt = 0;
-        _proposal.yesVotes = N_MEMBERS;
-
-        // InitialVoting child1 = new InitialVoting();
-        // Governance child2 = new Governance();
-        // Referendum child3 = new Referendum();
-        // Financial child4 = new Financial();
     }
 }
 
@@ -98,21 +73,21 @@ contract InitialVoting is SharedStorage {
     mapping(bytes32 => bool) private isVoterHash; // Random voter hash
     mapping(address => uint256) private voteTime; // 0:not registered, 1:registered, >1:voted at timestamp
 
-    address[N_MEMBERS] private electedMembers;
+    address[N_MEMBERS] public electedMembers;
     bool public membersElected = false;
 
     address public currentLeaderAddress;
     uint256 public currentLeaderNumber; // 1 to 50 representing position from highest voted
 
-    // offchain/frontend: voterHashes[i] = hash(FirstName+LastName+DoB(YYYY/MM/DD)+SSN)
+    // offchain/frontend: voterHashes[i] = hash(FirstName+LastName+DoB(YYYY/MM/DD)+SSN+Gender(male=0,female=1)) 
     // JavaScript:
     // const crypto = require('crypto');
-    // const input = firstName + lastName + dob + ssn;
+    // const input = firstName + lastName + dob + ssn + gender; 
     // const hash = crypto.createHash('sha256').update(input).digest('hex');
-    function addVoter(
+    function addVoter( 
         bytes32[VOTER_BATCH] calldata voterHashes, // 10 voter hashes in any order
         address[VOTER_BATCH] calldata voterAddresses // 10 voter addresses in any order
-    ) public {
+    ) external {
         require(msg.sender == neutral, "Not authorized neutral");
         require(
             getCurrentPhase() == Phase.Registration,
@@ -211,7 +186,6 @@ contract InitialVoting is SharedStorage {
         candidateList.push(msg.sender);
         emit CandidateRegistered(msg.sender, _fullName, _bio, _website);
     }
-
     event CandidateRegistered(
         address indexed candidate,
         string fullName,
@@ -227,7 +201,7 @@ contract InitialVoting is SharedStorage {
     }
 
     //mapping(address => uint256[]) private voter2Candidates;
-    function voteCandidates(uint256[] calldata _candidatesIds) public {
+    function voteCandidates(uint256[] calldata _candidatesIds) external {
         require(getCurrentPhase() == Phase.Election, "Not in Election phase");
         require(
             _candidatesIds.length <= candidateList.length,
@@ -255,10 +229,9 @@ contract InitialVoting is SharedStorage {
             // voter2Candidates[msg.sender].push(_candidateId);
         }
     }
-
     event VoteCast(address indexed voter);
 
-    function getElectionResults() public returns (address[N_MEMBERS] memory) {
+    function getElectionResults() external returns (address[N_MEMBERS] memory) {
         if (membersElected) {
             return electedMembers;
         }
@@ -297,7 +270,8 @@ contract InitialVoting is SharedStorage {
         address firstLeader
     );
 
-    function changeLeader() public {
+    function changeLeader() external {
+        require(membersElected,"No leader yet");
         require(
             block.timestamp >=
                 candidateInfo[currentLeaderAddress].leaderAt + LEAD_PERIOD,
@@ -408,7 +382,7 @@ contract Governance is SharedStorage {
     }
     event ProposalWithdrawn(uint256 indexed proposalId);
 
-    function _executeProposal(uint256 proposalId) internal {
+    function _executeProposal(uint256 proposalId) private {
         Proposal storage proposal = proposals[proposalId];
         for (uint256 i; i < proposal.payments.length; i++) {
             Payment memory payment = proposal.payments[i];
@@ -422,270 +396,6 @@ contract Governance is SharedStorage {
         require(proposalId < proposals.length, "Invalid proposal ID");
         return proposals[proposalId];
     }
-
-    function getVotingTimeProposal(
-        uint256 proposalId,
-        address memberAddress
-    ) external view returns (uint256) {
-        require(proposalId < proposals.length, "Invalid proposal ID");
-        require(candidateInfo[memberAddress].electedMember, "Not a Member");
-        // return proposals[proposalId].memberVotedAt[memberAddress];
-
-        return memberVotedAt[memberAddress][proposalId];
-    }
-
-    function getMemberActiveProposal(
-        address memberAddress
-    ) external view returns (uint256) {
-        require(candidateInfo[memberAddress].electedMember, "Not a Member");
-        return activeProposalByMember[memberAddress];
-    }
-}
-
-contract Referendum is SharedStorage {
-    uint256 public constant GOV_LENGTH = 10 weeks;
-    uint256 public constant SUBMISSION_FEE = 1 ether / 1000;
-    uint8 public constant MIN_DRAFTS = 10;
-    uint32 public constant MIN_VOTERS = 1_000_000;
-
-    struct ConstitutionDraft {
-        string description; // Brief description or title
-        string constitutionText; // Full text of the constitution
-        string implementationCode; // Optional computer implementation
-        string submitterIdentity; // Name/pseudonym/org/group
-        bytes32 hashedOffChain; // Hash of above four fields
-        string supportingMaterials; // IPFS hash for supporting files (PDF, video, etc.)
-        uint256 submittedAt; // Time of submission
-        uint256 voteCount; // Number of people voted for this draft
-    }
-    ConstitutionDraft[] public constitutionDrafts;
-
-    mapping(bytes32 => address[2]) private registrarsVoter; // The registrars for each voter hash
-    mapping(address => uint256) private referendumVotingTime;
-    // 0:not registered, 1:registered once, 2: registered twice, >2:voted at timestamp
-
-    uint32 public referendumVoterCount;
-
-    uint256 public ratifiedConstitutionId;
-
-    function submitDraft(ConstitutionDraft memory _draft) public payable {
-        require(getCurrentPhase() == Phase.Governance, "Wrong phase");
-        require(bytes(_draft.description).length > 0, "Description required");
-        require(
-            bytes(_draft.constitutionText).length > 0,
-            "constitutionText required"
-        );
-        require(
-            bytes(_draft.submitterIdentity).length > 0,
-            "Proposer name required"
-        );
-        require(msg.value >= SUBMISSION_FEE, "Insufficient submission fee");
-
-        bytes32 hashedOnChain = keccak256(
-            abi.encodePacked(
-                _draft.description,
-                _draft.implementationCode,
-                _draft.constitutionText,
-                _draft.submitterIdentity
-            )
-        );
-
-        require(hashedOnChain == _draft.hashedOffChain, "Incorrect Hash!");
-
-        _draft.submittedAt = block.timestamp;
-        _draft.voteCount = 0;
-
-        constitutionDrafts.push(_draft);
-
-        emit ConstitutionDraftSubmitted(constitutionDrafts.length - 1, _draft);
-    }
-
-    event ConstitutionDraftSubmitted(
-        uint256 indexed draftId,
-        ConstitutionDraft draft
-    );
-
-    function getConstitution(
-        uint256 draftId
-    ) public view returns (ConstitutionDraft memory) {
-        require(
-            draftId < constitutionDrafts.length,
-            "Invalid constitution draft ID"
-        );
-        return constitutionDrafts[draftId];
-    }
-
-    // members can hire and fire registrars
-    uint32 public constant REF_VOTER_BATCH = 10;
-    uint256 public constant MAX_APPROVALS = 1000;
-    int256 public constant REQUIRED_SCORE = 10;
-
-    mapping(address => mapping(address => int8)) public memberRegistrar; // member => registrar => vote (-1, 0, 1)
-    mapping(address => int256) public registrarScore; // registrar => (approvals - disapprovals)
-    mapping(address => uint256) public memberApprovalCount; // count of +1 votes per member
-
-    function approveRegistrar(address registrar, int8 vote) public {
-        require(candidateInfo[msg.sender].electedMember, "Not a member");
-        require(vote >= -1 && vote <= 1, "Vote must be -1, 0, or 1");
-
-        int8 oldVote = memberRegistrar[msg.sender][registrar];
-        if (oldVote == 0 && vote != 0) {
-            require(
-                memberApprovalCount[msg.sender] < MAX_APPROVALS,
-                "Max votes reached"
-            );
-            memberApprovalCount[msg.sender]++;
-        } else if (oldVote != 0 && vote == 0) {
-            memberApprovalCount[msg.sender]--;
-        }
-
-        memberRegistrar[msg.sender][registrar] = vote;
-        registrarScore[registrar] += (vote - oldVote);
-    }
-
-    // Multiple Registrars required for registration
-    // Registrars are randomly assigned to voters.
-    // offchain/frontend: voterHashes[i] = hash(FirstName+LastName+DoB(YYYY/MM/DD)+SSN)
-    function registerVoterBatch(
-        bytes32[REF_VOTER_BATCH] calldata voterHashes, // 10 voter hashes in any order
-        address[REF_VOTER_BATCH] calldata voterAddresses // 10 voter addresses in any order
-    ) public {
-        require(
-            registrarScore[msg.sender] >= REQUIRED_SCORE,
-            "Not enough approval"
-        );
-        require(getCurrentPhase() == Phase.Governance, "Wrong phase");
-        require(
-            voterHashes.length == REF_VOTER_BATCH &&
-                voterAddresses.length == REF_VOTER_BATCH,
-            "Incorrect batch size"
-        );
-
-        // Check all hashes are new
-        for (uint8 i = 0; i < REF_VOTER_BATCH; i++) {
-            if (registrarsVoter[voterHashes[i]][0] == address(0)) {
-                registrarsVoter[voterHashes[i]][0] = msg.sender;
-            } else if (registrarsVoter[voterHashes[i]][1] == address(0)) {
-                registrarsVoter[voterHashes[i]][1] = msg.sender;
-            } else {
-                revert("Voter hash already registered.");
-            }
-        }
-
-        // Enable voting for all addresses
-        for (uint8 i = 0; i < REF_VOTER_BATCH; i++) {
-            require(voterAddresses[i] != address(0), "Invalid voter address");
-            require(
-                referendumVotingTime[voterAddresses[i]] < 2,
-                "Addresss already registered. Registrar ERROR!"
-            );
-            referendumVotingTime[voterAddresses[i]]++;
-        }
-
-        referendumVoterCount += REF_VOTER_BATCH;
-
-        emit VoterRegistered(voterAddresses, msg.sender, referendumVoterCount);
-    }
-    event VoterRegistered(
-        address[REF_VOTER_BATCH] indexed voter,
-        address registrar,
-        uint256 referendumVoterCount
-    );
-
-    function getRegistrarsOfHash(
-        bytes32 voterHash
-    ) external view returns (address[2] memory) {
-        return registrarsVoter[voterHash];
-    }
-
-    function getVoterStatus(
-        address voterAddress
-    ) external view returns (uint256) {
-        return referendumVotingTime[voterAddress];
-    }
-
-    function startReferendum() public {
-        require(
-            electionEnd + GOV_LENGTH < block.timestamp,
-            "Cannot start referendum yet"
-        );
-        require(ratifiedConstitutionId == 0, "Already ratified a constitution");
-        require(constitutionDrafts.length > MIN_DRAFTS, "Not enough drafts");
-        require(referendumVoterCount >= MIN_VOTERS, "Not enough voters");
-        referendumEndTime = block.timestamp + 1 days;
-
-        emit ReferendumStarted();
-    }
-
-    event ReferendumStarted();
-
-    function voteInReferendum(uint256[] calldata _drafts) external {
-        require(block.timestamp < referendumEndTime, "Not in Referendum time");
-        require(
-            _drafts.length <= constitutionDrafts.length,
-            "Invalid draft list"
-        );
-        require(
-            referendumVotingTime[msg.sender] == 2,
-            "Voted or Not registered enough times"
-        );
-
-        bool[] memory votedForDrafts = new bool[](constitutionDrafts.length);
-
-        for (uint256 i = 0; i < _drafts.length; i++) {
-            uint256 _draftId = _drafts[i];
-            require(_draftId < constitutionDrafts.length, "Invalid draft");
-            require(!votedForDrafts[_draftId], "Repetitive draftId");
-            votedForDrafts[_draftId] = true;
-            constitutionDrafts[_draftId].voteCount++;
-        }
-
-        referendumVotingTime[msg.sender] = block.timestamp;
-        emit ReferendumVoteCast(msg.sender);
-    }
-
-    event ReferendumVoteCast(address indexed voter);
-
-    function getReferendumResults()
-        external
-        returns (uint256, ConstitutionDraft memory)
-    {
-        if (ratifiedConstitutionId > 0)
-            return (
-                ratifiedConstitutionId,
-                getConstitution(ratifiedConstitutionId)
-            );
-
-        require(
-            referendumEndTime > 0 && referendumEndTime < block.timestamp,
-            "Call once after Referendum"
-        );
-
-        uint256 _winningDraftId;
-        uint256 _maxVotes = 0;
-
-        for (uint256 i = 0; i < constitutionDrafts.length; i++) {
-            if (constitutionDrafts[i].voteCount > _maxVotes) {
-                _maxVotes = constitutionDrafts[i].voteCount;
-                _winningDraftId = i;
-            }
-        }
-
-        ratifiedConstitutionId = _winningDraftId;
-
-        ConstitutionDraft memory _ratifiedConstitution = constitutionDrafts[
-            _winningDraftId
-        ];
-
-        emit ConstitutionRatified(_winningDraftId, _ratifiedConstitution);
-
-        return (_winningDraftId, _ratifiedConstitution);
-    }
-
-    event ConstitutionRatified(
-        uint256 indexed winningProposalId,
-        ConstitutionDraft ratifiedConstitution
-    );
 }
 
 contract Financial is SharedStorage {
@@ -700,7 +410,7 @@ contract Financial is SharedStorage {
 
     struct Txn {
         int256 amount;
-        uint256 timestamp;
+        uint256 txnTime;
     }
     mapping(address => Txn[]) public LenderTxns;
 
@@ -790,7 +500,7 @@ contract Financial is SharedStorage {
     function lend() external payable {
         Txn memory newTxn = Txn({
             amount: int256(msg.value),
-            timestamp: block.timestamp
+            txnTime: block.timestamp
         });
 
         LenderTxns[msg.sender].push(newTxn);
@@ -799,9 +509,269 @@ contract Financial is SharedStorage {
     event LoanReceived(address indexed lender, int256 amount);
 
     function getBalance() external view returns (int256 _sum) {
+        // Assuming rate = 0 
         for (uint16 i; i < LenderTxns[msg.sender].length; i++) {
             _sum += LenderTxns[msg.sender][i].amount;
         }
         return _sum;
     }
+} 
+
+contract Referendum is SharedStorage {
+    uint256 public constant GOV_LENGTH = 10 weeks;
+    uint256 public constant SUBMISSION_FEE = 1 ether / 1000;
+    uint8 public constant MIN_DRAFTS = 10;
+    uint32 public constant MIN_VOTERS = 1_000_000;
+    uint32 public constant REF_VOTER_BATCH = 10;
+    uint256 public constant MAX_APPROVALS = 1000;
+    int256 public constant REQUIRED_SCORE = 10;
+
+    struct ConstitutionDraft {
+        string description; // Brief description or title
+        string constitutionText; // Full text of the constitution
+        string implementationCode; // Optional computer implementation
+        string submitterIdentity; // Name/pseudonym/org/group
+        bytes32 hashedOffChain; // Hash of above four fields
+        string supportingMaterials; // IPFS hash for supporting files (PDF, video, etc.)
+        uint256 submittedAt; // Time of submission
+        uint256 voteCount; // Number of people voted for this draft
+    }
+    ConstitutionDraft[] public constitutionDrafts;  
+
+    mapping(bytes32 => address[2]) private registrarsVoter; // The registrars for each voter hash
+    mapping(address => uint256) private referendumVotingTime;
+    // 0:not registered, 1:registered once, 2: registered twice, >2:voted at timestamp
+
+    uint32 public referendumVoterCount;
+    uint256 public ratifiedConstitutionId;
+
+    mapping(address => mapping(address => int8)) private memberRegistrar; // member => registrar => vote (-1, 0, 1)
+    mapping(address => int256) private registrarScore; // registrar => (approvals - disapprovals)
+    mapping(address => uint256) private memberApprovalCount; // count of nonzero votes per member
+
+    function submitDraft(ConstitutionDraft memory _draft) external payable {
+        require(getCurrentPhase() == Phase.Governance, "Wrong phase");
+        require(bytes(_draft.description).length > 0, "Description required");
+        require(
+            bytes(_draft.constitutionText).length > 0,
+            "constitutionText required"
+        );
+        require(
+            bytes(_draft.submitterIdentity).length > 0,
+            "Proposer name required"
+        );
+        require(msg.value >= SUBMISSION_FEE, "Insufficient submission fee");
+
+        bytes32 hashedOnChain = keccak256(
+            abi.encodePacked(
+                _draft.description,
+                _draft.implementationCode,
+                _draft.constitutionText,
+                _draft.submitterIdentity
+            )
+        );
+
+        require(hashedOnChain == _draft.hashedOffChain, "Incorrect Hash!");
+
+        _draft.submittedAt = block.timestamp;
+        _draft.voteCount = 0;
+
+        constitutionDrafts.push(_draft);
+
+        emit ConstitutionDraftSubmitted(constitutionDrafts.length - 1, _draft);
+    }
+    event ConstitutionDraftSubmitted(
+        uint256 indexed draftId,
+        ConstitutionDraft draft
+    );
+
+    function getConstitution(
+        uint256 draftId
+    ) external view returns (ConstitutionDraft memory) {
+        require(
+            draftId < constitutionDrafts.length,
+            "Invalid constitution draft ID"
+        );
+        return constitutionDrafts[draftId];
+    }
+
+    function approveRegistrar(address registrar, int8 vote) external {
+        require(candidateInfo[msg.sender].electedMember, "Not a member");
+        require(vote >= -1 && vote <= 1, "Vote must be -1, 0, or 1");
+
+        int8 oldVote = memberRegistrar[msg.sender][registrar];
+        if (oldVote == 0 && vote != 0) {
+            require(
+                memberApprovalCount[msg.sender] < MAX_APPROVALS,
+                "Max votes reached"
+            );
+            memberApprovalCount[msg.sender]++;
+        } else if (oldVote != 0 && vote == 0) {
+            memberApprovalCount[msg.sender]--;
+        }
+
+        memberRegistrar[msg.sender][registrar] = vote;
+        registrarScore[registrar] += (vote - oldVote);
+    }
+
+    // Multiple Registrars required for registration
+    // Registrars are randomly assigned to voters.
+    // offchain/frontend: voterHashes[i] = hash(FirstName+LastName+DoB(YYYY/MM/DD)+SSN+Gender(male=0,female=1))
+    function registerVoterBatch(
+        bytes32[REF_VOTER_BATCH] calldata voterHashes, // 10 voter hashes in any order
+        address[REF_VOTER_BATCH] calldata voterAddresses // 10 voter addresses in any order
+    ) external {
+        require(
+            registrarScore[msg.sender] >= REQUIRED_SCORE,
+            "Not enough approval"
+        );
+        require(getCurrentPhase() == Phase.Governance, "Wrong phase");
+        require(
+            voterHashes.length == REF_VOTER_BATCH &&
+                voterAddresses.length == REF_VOTER_BATCH,
+            "Incorrect batch size"
+        );
+
+        // Check all hashes are new
+        for (uint8 i = 0; i < REF_VOTER_BATCH; i++) {
+            if (registrarsVoter[voterHashes[i]][0] == address(0)) {
+                registrarsVoter[voterHashes[i]][0] = msg.sender;
+            } else if (registrarsVoter[voterHashes[i]][1] == address(0)) {
+                registrarsVoter[voterHashes[i]][1] = msg.sender;
+            } else {
+                revert("Voter hash already registered.");
+            }
+        }
+
+        // Enable voting for all addresses
+        for (uint8 i = 0; i < REF_VOTER_BATCH; i++) {
+            require(voterAddresses[i] != address(0), "Invalid voter address");
+            require(
+                referendumVotingTime[voterAddresses[i]] < 2,
+                "Addresss already registered. Registrar ERROR!"
+            );
+            referendumVotingTime[voterAddresses[i]]++;
+        }
+
+        referendumVoterCount += REF_VOTER_BATCH;
+
+        emit VoterRegistered(voterAddresses, msg.sender, referendumVoterCount);
+    }
+    event VoterRegistered(
+        address[REF_VOTER_BATCH] indexed voter,
+        address registrar,
+        uint256 referendumVoterCount
+    );
+
+    function getRegistrarsOfHash(
+        bytes32 voterHash
+    ) external view returns (address[2] memory) {
+        return registrarsVoter[voterHash];
+    }
+
+    function getVoterStatus(
+        address voterAddress
+    ) external view returns (uint256) {
+        return referendumVotingTime[voterAddress];
+    }
+
+    function startReferendum() external {
+        require(
+            electionEnd + GOV_LENGTH < block.timestamp,
+            "Cannot start referendum yet"
+        );
+        require(ratifiedConstitutionId == 0, "Already ratified a constitution");
+        require(constitutionDrafts.length > MIN_DRAFTS, "Not enough drafts");
+        require(referendumVoterCount >= MIN_VOTERS, "Not enough voters");
+        referendumEndTime = block.timestamp + 1 days;
+
+        emit ReferendumStarted();
+    }
+
+    event ReferendumStarted();
+
+    function voteInReferendum(uint256[] calldata _drafts) external {
+        require(block.timestamp < referendumEndTime, "Not in Referendum time");
+        require(
+            _drafts.length <= constitutionDrafts.length,
+            "Invalid draft list"
+        );
+        require(
+            referendumVotingTime[msg.sender] == 2,
+            "Voted or Not registered enough times"
+        );
+
+        bool[] memory votedForDrafts = new bool[](constitutionDrafts.length);
+
+        for (uint256 i = 0; i < _drafts.length; i++) {
+            uint256 _draftId = _drafts[i];
+            require(_draftId < constitutionDrafts.length, "Invalid draft");
+            require(!votedForDrafts[_draftId], "Repetitive draftId");
+            votedForDrafts[_draftId] = true;
+            constitutionDrafts[_draftId].voteCount++;
+        }
+
+        referendumVotingTime[msg.sender] = block.timestamp;
+        emit ReferendumVoteCast(msg.sender);
+    }
+    event ReferendumVoteCast(address indexed voter);
+
+    function getReferendumResults()
+        external
+        returns (uint256, ConstitutionDraft memory)
+    {
+        if (ratifiedConstitutionId > 0)
+            return (
+                ratifiedConstitutionId,
+                constitutionDrafts[ratifiedConstitutionId]
+            );
+
+        require(
+            referendumEndTime > 0 && referendumEndTime < block.timestamp,
+            "Call once after Referendum"
+        );
+
+        uint256 _winningDraftId;
+        uint256 _maxVotes = 0;
+
+        for (uint256 i = 0; i < constitutionDrafts.length; i++) {
+            if (constitutionDrafts[i].voteCount > _maxVotes) {
+                _maxVotes = constitutionDrafts[i].voteCount;
+                _winningDraftId = i;
+            }
+        }
+
+        ratifiedConstitutionId = _winningDraftId;
+
+        ConstitutionDraft memory _ratifiedConstitution = constitutionDrafts[
+            _winningDraftId
+        ];
+
+        emit ConstitutionRatified(_winningDraftId, _ratifiedConstitution);
+
+        return (_winningDraftId, _ratifiedConstitution);
+    }
+    event ConstitutionRatified(
+        uint256 indexed winningProposalId,
+        ConstitutionDraft ratifiedConstitution
+    );
 }
+
+contract Elections is SharedStorage{ 
+}
+
+contract SmartConstitution is InitialVoting, Governance, Referendum, Financial  {    
+    constructor(address neutralEntity, string memory interimConstitution) {
+        neutral = neutralEntity;
+        startTime = block.timestamp;
+        electionEnd = startTime + REG_TIME + 1;
+        Proposal storage _proposal = proposals.push();
+
+        _proposal.proposer = msg.sender;
+        _proposal.provisions = interimConstitution;
+        _proposal.proposedAt = startTime;
+        _proposal.executedAt = startTime;
+        _proposal.withdrawnAt = 0;
+        _proposal.yesVotes = N_MEMBERS;
+    }
+} 

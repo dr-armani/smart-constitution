@@ -1,6 +1,6 @@
 {
 	"compiler": {
-		"version": "0.8.26+commit.8a97fa7a"
+		"version": "0.8.28+commit.7893614a"
 	},
 	"language": "Solidity",
 	"output": {
@@ -147,6 +147,19 @@
 				"type": "function"
 			},
 			{
+				"inputs": [],
+				"name": "addedVoterCount",
+				"outputs": [
+					{
+						"internalType": "uint32",
+						"name": "",
+						"type": "uint32"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [
 					{
 						"internalType": "address",
@@ -243,25 +256,6 @@
 			{
 				"inputs": [
 					{
-						"internalType": "address",
-						"name": "memberAddress",
-						"type": "address"
-					}
-				],
-				"name": "getMemberActiveProposal",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
 						"internalType": "uint256",
 						"name": "proposalId",
 						"type": "uint256"
@@ -327,30 +321,6 @@
 						"internalType": "struct Proposal",
 						"name": "",
 						"type": "tuple"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "proposalId",
-						"type": "uint256"
-					},
-					{
-						"internalType": "address",
-						"name": "memberAddress",
-						"type": "address"
-					}
-				],
-				"name": "getVotingTimeProposal",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
 					}
 				],
 				"stateMutability": "view",
@@ -558,18 +528,18 @@
 			"bytecodeHash": "ipfs"
 		},
 		"optimizer": {
-			"enabled": false,
+			"enabled": true,
 			"runs": 200
 		},
 		"remappings": []
 	},
 	"sources": {
 		"SmartConstitution.sol": {
-			"keccak256": "0x792d16b83eef8802197b7d46e5540e7e900dbc1f3f1b6a97c79886a1ed57d956",
+			"keccak256": "0x5b044cfc56a325ada26d2a76957ed1df142a920d5e69051516392ce058b517bb",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://6f598513952ee11b76f867fcea8004fd3a6904e2caeddcf4bc1d056c69333674",
-				"dweb:/ipfs/QmURUdp3osJjCo8uKPyVrZXfnnXLomaZiJyjuDm6nDBQR2"
+				"bzz-raw://76aeea874962d19485f369fbd0fa5546981db3ec4e8c372d49df55aaa06bd8b2",
+				"dweb:/ipfs/QmUaMRoS7V3wuB663spNHN64VeAry1N1wAaxNv3inzTDF5"
 			]
 		}
 	},
