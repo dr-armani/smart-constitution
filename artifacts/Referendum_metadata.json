@@ -11,7 +11,7 @@
 					{
 						"indexed": true,
 						"internalType": "uint256",
-						"name": "proposalId",
+						"name": "draftId",
 						"type": "uint256"
 					},
 					{
@@ -33,7 +33,7 @@
 							},
 							{
 								"internalType": "string",
-								"name": "proposerIdentity",
+								"name": "submitterIdentity",
 								"type": "string"
 							},
 							{
@@ -58,12 +58,12 @@
 							}
 						],
 						"indexed": false,
-						"internalType": "struct Referendum.ConstitutionProposal",
-						"name": "proposal",
+						"internalType": "struct Referendum.ConstitutionDraft",
+						"name": "draft",
 						"type": "tuple"
 					}
 				],
-				"name": "ConstitutionProposalSubmitted",
+				"name": "ConstitutionDraftSubmitted",
 				"type": "event"
 			},
 			{
@@ -94,7 +94,7 @@
 							},
 							{
 								"internalType": "string",
-								"name": "proposerIdentity",
+								"name": "submitterIdentity",
 								"type": "string"
 							},
 							{
@@ -119,7 +119,7 @@
 							}
 						],
 						"indexed": false,
-						"internalType": "struct Referendum.ConstitutionProposal",
+						"internalType": "struct Referendum.ConstitutionDraft",
 						"name": "ratifiedConstitution",
 						"type": "tuple"
 					}
@@ -199,7 +199,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "MIN_PROPOSALS",
+				"name": "MIN_DRAFTS",
 				"outputs": [
 					{
 						"internalType": "uint8",
@@ -322,50 +322,6 @@
 			{
 				"inputs": [
 					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"name": "bills",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "proposer",
-						"type": "address"
-					},
-					{
-						"internalType": "string",
-						"name": "provisions",
-						"type": "string"
-					},
-					{
-						"internalType": "uint256",
-						"name": "proposedAt",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "executedAt",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "withdrawnAt",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint8",
-						"name": "yesVotes",
-						"type": "uint8"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
 						"internalType": "address",
 						"name": "",
 						"type": "address"
@@ -439,7 +395,7 @@
 						"type": "uint256"
 					}
 				],
-				"name": "constitutionProposals",
+				"name": "constitutionDrafts",
 				"outputs": [
 					{
 						"internalType": "string",
@@ -458,7 +414,7 @@
 					},
 					{
 						"internalType": "string",
-						"name": "proposerIdentity",
+						"name": "submitterIdentity",
 						"type": "string"
 					},
 					{
@@ -502,7 +458,7 @@
 				"inputs": [
 					{
 						"internalType": "uint256",
-						"name": "proposalId",
+						"name": "draftId",
 						"type": "uint256"
 					}
 				],
@@ -527,7 +483,7 @@
 							},
 							{
 								"internalType": "string",
-								"name": "proposerIdentity",
+								"name": "submitterIdentity",
 								"type": "string"
 							},
 							{
@@ -551,7 +507,7 @@
 								"type": "uint256"
 							}
 						],
-						"internalType": "struct Referendum.ConstitutionProposal",
+						"internalType": "struct Referendum.ConstitutionDraft",
 						"name": "",
 						"type": "tuple"
 					}
@@ -600,7 +556,7 @@
 							},
 							{
 								"internalType": "string",
-								"name": "proposerIdentity",
+								"name": "submitterIdentity",
 								"type": "string"
 							},
 							{
@@ -624,7 +580,7 @@
 								"type": "uint256"
 							}
 						],
-						"internalType": "struct Referendum.ConstitutionProposal",
+						"internalType": "struct Referendum.ConstitutionDraft",
 						"name": "",
 						"type": "tuple"
 					}
@@ -715,12 +671,12 @@
 			},
 			{
 				"inputs": [],
-				"name": "proposalCount",
+				"name": "neutral",
 				"outputs": [
 					{
-						"internalType": "uint256",
+						"internalType": "address",
 						"name": "",
-						"type": "uint256"
+						"type": "address"
 					}
 				],
 				"stateMutability": "view",
@@ -729,66 +685,42 @@
 			{
 				"inputs": [
 					{
-						"components": [
-							{
-								"internalType": "string",
-								"name": "description",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "constitutionText",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "implementationCode",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "proposerIdentity",
-								"type": "string"
-							},
-							{
-								"internalType": "bytes32",
-								"name": "hashedOffChain",
-								"type": "bytes32"
-							},
-							{
-								"internalType": "string",
-								"name": "supportingMaterials",
-								"type": "string"
-							},
-							{
-								"internalType": "uint256",
-								"name": "submittedAt",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "voteCount",
-								"type": "uint256"
-							}
-						],
-						"internalType": "struct Referendum.ConstitutionProposal",
-						"name": "_proposal",
-						"type": "tuple"
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
 					}
 				],
-				"name": "proposeConstitution",
-				"outputs": [],
-				"stateMutability": "payable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "randomizer",
+				"name": "proposals",
 				"outputs": [
 					{
 						"internalType": "address",
-						"name": "",
+						"name": "proposer",
 						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "provisions",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "proposedAt",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "executedAt",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "withdrawnAt",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint8",
+						"name": "yesVotes",
+						"type": "uint8"
 					}
 				],
 				"stateMutability": "view",
@@ -893,8 +825,63 @@
 			{
 				"inputs": [
 					{
+						"components": [
+							{
+								"internalType": "string",
+								"name": "description",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "constitutionText",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "implementationCode",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "submitterIdentity",
+								"type": "string"
+							},
+							{
+								"internalType": "bytes32",
+								"name": "hashedOffChain",
+								"type": "bytes32"
+							},
+							{
+								"internalType": "string",
+								"name": "supportingMaterials",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "submittedAt",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "voteCount",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct Referendum.ConstitutionDraft",
+						"name": "_draft",
+						"type": "tuple"
+					}
+				],
+				"name": "submitDraft",
+				"outputs": [],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
 						"internalType": "uint256[]",
-						"name": "_proposals",
+						"name": "_drafts",
 						"type": "uint256[]"
 					}
 				],
@@ -932,11 +919,11 @@
 	},
 	"sources": {
 		"SmartConstitution.sol": {
-			"keccak256": "0xc27d51fe9896e75114fa787d8c1832c774f42c6092bbfda15d0e2b27ec9b9aba",
+			"keccak256": "0x792d16b83eef8802197b7d46e5540e7e900dbc1f3f1b6a97c79886a1ed57d956",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://7c1c9252080f455df31dd2ce7cf706be8b0a7ab0f22b5f520da7538cbfd4f314",
-				"dweb:/ipfs/QmdVyzKCdgfDaEotgGFfNdMUSaJV5bt3yqjuwyWVUsv59Y"
+				"bzz-raw://6f598513952ee11b76f867fcea8004fd3a6904e2caeddcf4bc1d056c69333674",
+				"dweb:/ipfs/QmURUdp3osJjCo8uKPyVrZXfnnXLomaZiJyjuDm6nDBQR2"
 			]
 		}
 	},

@@ -83,10 +83,10 @@ contract SmartConstitution is SharedStorage {
         _proposal.withdrawnAt = 0;
         _proposal.yesVotes = N_MEMBERS;
 
-        InitialVoting child1 = new InitialVoting();
-        Governance child2 = new Governance();
-        Referendum child3 = new Referendum();
-        Financial child4 = new Financial();
+        // InitialVoting child1 = new InitialVoting();
+        // Governance child2 = new Governance();
+        // Referendum child3 = new Referendum();
+        // Financial child4 = new Financial();
     }
 }
 
@@ -648,7 +648,7 @@ contract Referendum is SharedStorage {
 
     function getReferendumResults()
         external
-        returns (uint256, ConstitutionProposal memory)
+        returns (uint256, ConstitutionDraft memory)
     {
         if (ratifiedConstitutionId > 0)
             return (
@@ -673,7 +673,7 @@ contract Referendum is SharedStorage {
 
         ratifiedConstitutionId = _winningDraftId;
 
-        ConstitutionProposal memory _ratifiedConstitution = constitutionDrafts[
+        ConstitutionDraft memory _ratifiedConstitution = constitutionDrafts[
             _winningDraftId
         ];
 
@@ -684,7 +684,7 @@ contract Referendum is SharedStorage {
 
     event ConstitutionRatified(
         uint256 indexed winningProposalId,
-        ConstitutionProposal ratifiedConstitution
+        ConstitutionDraft ratifiedConstitution
     );
 }
 
