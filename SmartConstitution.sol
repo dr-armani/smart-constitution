@@ -65,7 +65,7 @@ contract SharedStorage {
     }
 }
 
-contract InitialVoting is SharedStorage {
+contract Formation is SharedStorage {
     uint256 public constant LEAD_PERIOD = 1 weeks;
     uint256 public constant REG_FEE = 1 ether / 1000;
     uint32 public constant VOTER_BATCH = 10;
@@ -77,17 +77,31 @@ contract InitialVoting is SharedStorage {
     bool public membersElected = false;
 
     address public currentLeaderAddress;
-    uint256 public currentLeaderNumber; // 1 to 50 representing position from highest voted
+    uint256 public currentLeaderNumber; // Member number of the Current Leader
+    
+    /**
+    * @notice Neutral: Verify that (1957 <= yearOfBirth <= 2006).   
+    * @param voterAddresses: Wallet addresses of the randomly selected voters 
+    * @param voterHashes: Hash of yearOfBirth(yyyy)+monthOfBirth(mm)+gender(male=0,female=1) 
+    * @notice Neutral: Calculate hash offchain in frontend: 
 
-    // offchain/frontend: voterHashes[i] = hash(FirstName+LastName+DoB(YYYY/MM/DD)+SSN+Gender(male=0,female=1))
-    // JavaScript:
-    // const crypto = require('crypto');
-    // const input = firstName + lastName + dob + ssn + gender;
-    // const hash = crypto.createHash('sha256').update(input).digest('hex');
+    Example JavaScript Code: 
+    const crypto = require('crypto'); 
+    const yearOfBirth = 1995; // Before 2006 
+    const monthOfBirth = 6; // June
+    const gender = 1; // Female
+    if (yearOfBirth > 2006) { 
+        throw new Error("Must be born in or before 2006"); } 
+    const input = String(yearOfBirth) + String(monthOfBirth).padStart(2, '0') + String(gender);
+    console.log(input); // "2006061"
+    const hash = crypto.createHash('sha256').update(input).digest('hex'); 
+    console.log("Hash:", hash);
+    */
+
     function addVoter(
-        bytes32[VOTER_BATCH] calldata voterHashes, // 10 voter hashes in any order
-        address[VOTER_BATCH] calldata voterAddresses // 10 voter addresses in any order
-    ) external {
+        address[VOTER_BATCH] calldata voterAddresses, // 10 voters' addresses in a random order
+        bytes32[VOTER_BATCH] calldata voterHashes // 10 voters' hashes in a random order 
+    ) external { 
         require(msg.sender == neutral, "Not authorized neutral");
         require(
             getCurrentPhase() == Phase.Registration,
@@ -624,12 +638,34 @@ contract Referendum is SharedStorage {
         registrarScore[registrar] += (vote - oldVote);
     }
 
-    // Two Registrars required for double registration
-    // Registrars are randomly assigned to voters.
-    // offchain/frontend: voterHashes[i] = hash(FirstName+LastName+DoB(YYYY/MM/DD)+SSN+Gender(male=0,female=1))
+    /**  
+    * @notice Members: Two (randomly assigned) registrars required for double registration.  
+    * @notice Registrar: Verify that (yearOfBirth <= 2006). 
+    * @param voterAddresses[i]: Wallet addresses of the verified voters 
+    * @param voterHashes[i]: Hash of FirstName+LastName+DoB(YYYY/MM/DD)+SSN+gender(male=0,female=1) 
+    * @notice Registrar: Calculate hash offchain in frontend: 
+
+    Example JavaScript Code: 
+    const crypto = require('crypto'); 
+    const firstName = "John";
+    const lastName = "Doe";
+    const yearOfBirth = 1995; // Before 2006 
+    const monthOfBirth = 6;   // 06
+    const dayOfBirth = 3;     // 03
+    const gender = 1;         // Female
+    const ssn = "123-45-6789";
+    if (yearOfBirth > 2006) { 
+        throw new Error("Must be born in or before 2006"); } 
+    const dob = String(yearOfBirth) + String(monthOfBirth).padStart(2, '0') + String(dayOfBirth).padStart(2, '0')
+    const input = firstName + lastName + ssn + dob + String(gender) ; 
+    console.log(input); // "JohnDoe123-45-6789200606031" 
+    const hash = crypto.createHash('sha256').update(input).digest('hex'); 
+    console.log("Hash:", hash);
+    */
+
     function registerVoterBatch(
-        bytes32[REF_VOTER_BATCH] calldata voterHashes, // 10 voter hashes in any order
-        address[REF_VOTER_BATCH] calldata voterAddresses // 10 voter addresses in any order
+        address[REF_VOTER_BATCH] calldata voterAddresses, // 10 voter addresses in any order
+        bytes32[REF_VOTER_BATCH] calldata voterHashes // 10 voter hashes in any order
     ) external {
         require(
             registrarScore[msg.sender] >= REQUIRED_SCORE,
@@ -773,7 +809,7 @@ contract Referendum is SharedStorage {
 
 contract Elections is SharedStorage {}
 
-contract SmartConstitution is InitialVoting, Governance, Referendum, Finance {
+contract SmartConstitution is Formation, Governance, Referendum, Finance {
     constructor(address neutralEntity, string memory interimConstitution) {
         neutral = neutralEntity;
         startTime = block.timestamp;
