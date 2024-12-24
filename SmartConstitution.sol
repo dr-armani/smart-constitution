@@ -34,7 +34,7 @@ struct Proposal {
 }
 
 contract SharedStorage {
-    uint32 public constant RANDOM_VOTERS = 1000; // 1000 random voters
+    uint32 public constant RANDOM_VOTERS = 1200; // 1200 random voters
     uint256 public constant REG_TIME = 2 weeks;
     uint8 public constant N_MEMBERS = 50;
     uint256 public immutable startTime;
@@ -54,7 +54,7 @@ contract SharedStorage {
                 candidateList.length < 2 * N_MEMBERS ||
                 addedVoterCount < RANDOM_VOTERS
             ) {
-                // Postpone election for two weeks if fewer than 100 candidates or fewer than 1000 voters
+                // Postpone election for two weeks if fewer than 100 candidates or fewer than 1200 voters
                 electionEnd = electionEnd + REG_TIME;
                 return Phase.Registration;
             } else return Phase.Election;
@@ -79,12 +79,12 @@ contract InitialVoting is SharedStorage {
     address public currentLeaderAddress;
     uint256 public currentLeaderNumber; // 1 to 50 representing position from highest voted
 
-    // offchain/frontend: voterHashes[i] = hash(FirstName+LastName+DoB(YYYY/MM/DD)+SSN+Gender(male=0,female=1)) 
+    // offchain/frontend: voterHashes[i] = hash(FirstName+LastName+DoB(YYYY/MM/DD)+SSN+Gender(male=0,female=1))
     // JavaScript:
     // const crypto = require('crypto');
-    // const input = firstName + lastName + dob + ssn + gender; 
+    // const input = firstName + lastName + dob + ssn + gender;
     // const hash = crypto.createHash('sha256').update(input).digest('hex');
-    function addVoter( 
+    function addVoter(
         bytes32[VOTER_BATCH] calldata voterHashes, // 10 voter hashes in any order
         address[VOTER_BATCH] calldata voterAddresses // 10 voter addresses in any order
     ) external {
@@ -160,7 +160,7 @@ contract InitialVoting is SharedStorage {
             "Invalid bio"
         );
         require(
-            bytes(_website).length > 0 && bytes(_website).length <= 2000,
+            bytes(_website).length > 0 && bytes(_website).length <= 1000,
             "Invalid website"
         );
         require(msg.sender != address(0), "Invalid sender");
@@ -271,7 +271,7 @@ contract InitialVoting is SharedStorage {
     );
 
     function changeLeader() external {
-        require(membersElected,"No leader yet");
+        require(membersElected, "No leader yet");
         require(
             block.timestamp >=
                 candidateInfo[currentLeaderAddress].leaderAt + LEAD_PERIOD,
@@ -398,7 +398,7 @@ contract Governance is SharedStorage {
     }
 }
 
-contract Financial is SharedStorage {
+contract Finance is SharedStorage {
     uint8 constant MEDIAN_MEMBER = uint8(N_MEMBERS / 2);
 
     uint256 public currentRate;
@@ -420,7 +420,7 @@ contract Financial is SharedStorage {
     }
     MemberRate[N_MEMBERS] public sortedRates;
     mapping(address => uint8) public memberRank;
-    uint8 public numberOfRates = 0;
+    uint8 public noRates = N_MEMBERS;
 
     /**
      * @notice Returns contract balance
@@ -431,51 +431,58 @@ contract Financial is SharedStorage {
         return address(this).balance;
     }
 
-    function proposeRate(uint256 newRate) external {
+    function proposeRate(uint256 newRate) external returns (uint8) {
         require(
             candidateInfo[msg.sender].electedMember,
             "Only members can propose"
         );
-        require(newRate <= 5000, "Rate cannot exceed 50%"); // Max 50% APR in basis points
+        require(newRate <= 5000, "Rate > 50%"); // Max 50% APR in basis points
 
         uint256 oldRate;
         uint8 oldRank = memberRank[msg.sender];
+        uint8 rank;
 
-        if (oldRank == 0 && sortedRates[oldRank].member != msg.sender) {
-            numberOfRates++;
+        if (oldRank == 0 && noRates > 0) {
+            // sortedRates[0].member != msg.sender
+            noRates--;
             oldRate = 0;
+            rank = noRates;
         } else {
             oldRate = sortedRates[oldRank].rate;
+            rank = oldRank;
         }
 
-        uint8 newRank = oldRank;
-
         if (newRate == oldRate) {
-            return;
-        } else if (newRate > oldRate) {
-            // Move rates down
+            if (newRate == 0) {
+                sortedRates[rank].member = msg.sender;
+                memberRank[msg.sender] = rank;
+                return rank;
+            } else return oldRank;
+        }
+
+        if (newRate > oldRate) {
+            // Push rates down
             while (
-                newRank < N_MEMBERS - 1 &&
-                newRate > sortedRates[newRank + 1].rate
+                rank < N_MEMBERS - 1 && newRate > sortedRates[rank + 1].rate
             ) {
-                sortedRates[newRank] = sortedRates[newRank + 1];
-                memberRank[sortedRates[newRank].member] = newRank; // null if no member??
-                newRank++;
+                sortedRates[rank] = sortedRates[rank + 1];
+                memberRank[sortedRates[rank].member] = rank;
+                rank++;
             }
         } else {
             //(newRate < oldRate)
-            // Move rates up
-            while (newRank > 0 && newRate < sortedRates[newRank - 1].rate) {
-                sortedRates[newRank] = sortedRates[newRank - 1];
-                memberRank[sortedRates[newRank].member] = newRank;
-                newRank--;
+            // Push rates up
+            while (rank > 0 && newRate < sortedRates[rank - 1].rate) {
+                sortedRates[rank] = sortedRates[rank - 1];
+                memberRank[sortedRates[rank].member] = rank;
+                rank--;
             }
         }
 
-        sortedRates[newRank] = MemberRate({member: msg.sender, rate: newRate});
-        memberRank[msg.sender] = newRank;
+        sortedRates[rank] = MemberRate({member: msg.sender, rate: newRate});
+        memberRank[msg.sender] = rank;
 
-        emit MemberRateChanged(msg.sender, oldRate, oldRank, newRate, newRank);
+        emit MemberRateChanged(msg.sender, oldRate, oldRank, newRate, rank);
 
         // Check if median changes
         if (currentRate != sortedRates[MEDIAN_MEMBER].rate) {
@@ -509,22 +516,23 @@ contract Financial is SharedStorage {
     event LoanReceived(address indexed lender, int256 amount);
 
     function getBalance() external view returns (int256 _sum) {
-        // Assuming rate = 0 
+        // Assuming rate = 0
         for (uint16 i; i < LenderTxns[msg.sender].length; i++) {
             _sum += LenderTxns[msg.sender][i].amount;
         }
         return _sum;
     }
-} 
+}
 
 contract Referendum is SharedStorage {
     uint256 public constant GOV_LENGTH = 10 weeks;
     uint256 public constant SUBMISSION_FEE = 1 ether / 1000;
     uint8 public constant MIN_DRAFTS = 10;
     uint32 public constant MIN_VOTERS = 1_000_000;
-    uint32 public constant REF_VOTER_BATCH = 10;
-    uint256 public constant MAX_APPROVALS = 1000;
-    int256 public constant REQUIRED_SCORE = 10;
+    uint32 public constant REF_VOTER_BATCH = 10; // voter batch size for the referendum
+    uint256 public constant MAX_APPROVALS = 1000; // maximum registrar approval per member
+    int256 public constant REQUIRED_SCORE = 10; // required approvals for each registrar
+    uint256 public constant REQUIRED_REG = 2; // required number of registrations per voter
 
     struct ConstitutionDraft {
         string description; // Brief description or title
@@ -536,11 +544,11 @@ contract Referendum is SharedStorage {
         uint256 submittedAt; // Time of submission
         uint256 voteCount; // Number of people voted for this draft
     }
-    ConstitutionDraft[] public constitutionDrafts;  
+    ConstitutionDraft[] public constitutionDrafts;
 
-    mapping(bytes32 => address[2]) private registrarsVoter; // The registrars for each voter hash
+    mapping(bytes32 => address[REQUIRED_REG]) private voterRegistrars; // The registrars for each voter hash
     mapping(address => uint256) private referendumVotingTime;
-    // 0:not registered, 1:registered once, 2: registered twice, >2:voted at timestamp
+    // 0:not registered, 1:registered once, 2: registered twice, time:voted at timestamp
 
     uint32 public referendumVoterCount;
     uint256 public ratifiedConstitutionId;
@@ -614,7 +622,7 @@ contract Referendum is SharedStorage {
         registrarScore[registrar] += (vote - oldVote);
     }
 
-    // Multiple Registrars required for registration
+    // Two Registrars required for double registration
     // Registrars are randomly assigned to voters.
     // offchain/frontend: voterHashes[i] = hash(FirstName+LastName+DoB(YYYY/MM/DD)+SSN+Gender(male=0,female=1))
     function registerVoterBatch(
@@ -634,12 +642,16 @@ contract Referendum is SharedStorage {
 
         // Check all hashes are new
         for (uint8 i = 0; i < REF_VOTER_BATCH; i++) {
-            if (registrarsVoter[voterHashes[i]][0] == address(0)) {
-                registrarsVoter[voterHashes[i]][0] = msg.sender;
-            } else if (registrarsVoter[voterHashes[i]][1] == address(0)) {
-                registrarsVoter[voterHashes[i]][1] = msg.sender;
+            if (voterRegistrars[voterHashes[i]][0] == address(0)) {
+                voterRegistrars[voterHashes[i]][0] = msg.sender;
+            } else if (voterRegistrars[voterHashes[i]][1] == address(0)) {
+                require(
+                    voterRegistrars[voterHashes[i]][0] != msg.sender,
+                    "Registrar must be different"
+                );
+                voterRegistrars[voterHashes[i]][1] = msg.sender;
             } else {
-                revert("Voter hash already registered.");
+                revert("Hash already recorded");
             }
         }
 
@@ -647,8 +659,8 @@ contract Referendum is SharedStorage {
         for (uint8 i = 0; i < REF_VOTER_BATCH; i++) {
             require(voterAddresses[i] != address(0), "Invalid voter address");
             require(
-                referendumVotingTime[voterAddresses[i]] < 2,
-                "Addresss already registered. Registrar ERROR!"
+                referendumVotingTime[voterAddresses[i]] < REQUIRED_REG,
+                "Address already registered! REGISTRAR ERROR!"
             );
             referendumVotingTime[voterAddresses[i]]++;
         }
@@ -665,8 +677,8 @@ contract Referendum is SharedStorage {
 
     function getRegistrarsOfHash(
         bytes32 voterHash
-    ) external view returns (address[2] memory) {
-        return registrarsVoter[voterHash];
+    ) external view returns (address[REQUIRED_REG] memory) {
+        return voterRegistrars[voterHash];
     }
 
     function getVoterStatus(
@@ -757,10 +769,9 @@ contract Referendum is SharedStorage {
     );
 }
 
-contract Elections is SharedStorage{ 
-}
+contract Elections is SharedStorage {}
 
-contract SmartConstitution is InitialVoting, Governance, Referendum, Financial  {    
+contract SmartConstitution is InitialVoting, Governance, Referendum, Financial {
     constructor(address neutralEntity, string memory interimConstitution) {
         neutral = neutralEntity;
         startTime = block.timestamp;
@@ -774,4 +785,4 @@ contract SmartConstitution is InitialVoting, Governance, Referendum, Financial  
         _proposal.withdrawnAt = 0;
         _proposal.yesVotes = N_MEMBERS;
     }
-} 
+}
