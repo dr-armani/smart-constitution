@@ -431,7 +431,7 @@ contract Finance is SharedStorage {
         return address(this).balance;
     }
 
-    function proposeRate(uint256 newRate) external returns (uint8) {
+    function proposeRate(uint256 newRate) external returns (uint8 newRank) {
         require(
             candidateInfo[msg.sender].electedMember,
             "Only members can propose"
@@ -493,6 +493,8 @@ contract Finance is SharedStorage {
 
             emit InterestRateUpdated(currentRate);
         }
+
+        return rank; 
     }
     event MemberRateChanged(
         address indexed member,
@@ -771,7 +773,7 @@ contract Referendum is SharedStorage {
 
 contract Elections is SharedStorage {}
 
-contract SmartConstitution is InitialVoting, Governance, Referendum, Financial {
+contract SmartConstitution is InitialVoting, Governance, Referendum, Finance {
     constructor(address neutralEntity, string memory interimConstitution) {
         neutral = neutralEntity;
         startTime = block.timestamp;

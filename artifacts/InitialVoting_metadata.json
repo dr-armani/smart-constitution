@@ -1,6 +1,6 @@
 {
 	"compiler": {
-		"version": "0.8.28+commit.7893614a"
+		"version": "0.8.26+commit.8a97fa7a"
 	},
 	"language": "Solidity",
 	"output": {
@@ -635,11 +635,11 @@
 	},
 	"sources": {
 		"SmartConstitution.sol": {
-			"keccak256": "0x5b044cfc56a325ada26d2a76957ed1df142a920d5e69051516392ce058b517bb",
+			"keccak256": "0xdb5d09ec37f771c5cfec22a916481f9c631ed53ece50479a58379ac25fd8fe4a",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://76aeea874962d19485f369fbd0fa5546981db3ec4e8c372d49df55aaa06bd8b2",
-				"dweb:/ipfs/QmUaMRoS7V3wuB663spNHN64VeAry1N1wAaxNv3inzTDF5"
+				"bzz-raw://8c585f00eb3195a00c3f2c9c3f9f8b12e7536175566b5a4179ca4e59215d0cd8",
+				"dweb:/ipfs/Qmb36Pvdy8iutPwGaeuwtfLczocx52TeZ5JsZEqAdY1ZVv"
 			]
 		}
 	},
