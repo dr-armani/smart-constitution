@@ -3,19 +3,18 @@
 ### 1. The Transitional Government (hereafter "TG") is formed as follows:
 
 > 1.1. TG shall consist of 50 Members (hereinafter “Members”).  
-> 1.2. Initially, the controlling parties shall appoint a trusted neutral entity (hereinafter “Neutral”) to randomly select a representative sample of the population of the country to vote.  
-> 1.3. During the first 14 days after the appointment of Neutral:
->
-> > A. Neutral shall randomly select 1,200 citizens to vote anonymously and elect Members.  
-> > B. Any person may become a candidate for membership.
-> >
-> > 1.4. If, by day 14, there are at least 1,200 voters and 100 candidates, the election shall proceed on day 15, and the voters shall vote to elect 50 Members in an open, inclusive and free election. Otherwise, the election shall be postponed for two-week intervals, during which additional voters and candidates can be registered, until the thresholds are met.  
-> > 1.5. The election shall last 24 hours and shall use approval voting, allowing voters to vote for multiple candidates.  
-> > 1.6. The 50 candidates who received the most votes shall become Members and form the TG.  
-> > 1.7. The Member with the most votes shall serve as the first leader for the first week.  
-> > 1.8. At the end of each week, leadership shall rotate to the next most voted Member. In case of a tie, the Member who declared candidacy first shall become leader first.  
-> > 1.9. No person may serve as leader more than once or for over one week.  
-> > 1.10. The leader is responsible to coordinate among Members, organize Member meetings and report progress to the public.
+> 1.2. Initially, the controlling parties shall appoint a trusted neutral entity to select a representative random sample of the population to vote.   
+> 1.3. During the first 14 days after this appointment:  
+> > A. The neutral entity shall randomly select 1,200 citizens to vote anonymously and elect Members.  
+> > B. Any person may become a candidate for membership.  
+> 
+> 1.4. If, by day 14, there are at least 100 candidates and 1,200 voters, the election shall proceed on day 15, and the voters shall vote to elect 50 Members in an open, inclusive and free election. Otherwise, the election shall be postponed for two-week intervals, during which additional voters and candidates can be registered, until the thresholds are met.  
+> 1.5. The election shall last 24 hours and shall use approval voting, allowing voters to vote for multiple candidates.  
+> 1.6. The 50 candidates who received the most votes shall become Members and form the TG.  
+> 1.7. The Member with the most votes shall serve as the first leader for the first week.  
+> 1.8. At the end of each week, leadership shall rotate to the next most voted Member. In case of a tie, the Member who declared candidacy first shall become leader first.  
+> 1.9. No person may serve as leader more than once or for over one week.  
+> 1.10. The leader is responsible to coordinate among Members, organize Member meetings and report progress to the public.
 
 ### 2. The decisions of TG shall comply with the following:
 
