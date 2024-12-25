@@ -30,7 +30,7 @@
 ### 3. TG shall:
 
 > 3.1. Maintain stability, law, and order throughout the transition period;  
-> 3.2. Exercise control over the armed forces;  
+> 3.2. Exercise control over the armed forces, law enforcement, and judiciary during the transition period;  
 > 3.3. Collect new constitution drafts from the public within 10 weeks of formation, allowing anyone to submit a new constitution draft;  
 > 3.4. Organize a national referendum to ratify a new constitution after the 10-week period;
 > 3.5. Enable every citizen born in year 2006 or before to vote in the referendum;   
