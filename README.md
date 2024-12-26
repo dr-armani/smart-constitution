@@ -6,8 +6,8 @@
 > 1.2. Initially, the controlling parties shall appoint a trusted neutral entity to select a representative random sample of the population to vote.  
 > 1.3. Within 14 days of this appointment, the neutral entity shall randomly select 1,200 citizens born in year 2006 or earlier to vote anonymously and elect Members.  
 > 1.4. During this 14-day period, any person may register as a candidate for Membership.  
-> 1.5. If, by the end of day 14, at least 100 candidates and 1,200 voters are registered, the campaign period shall start and last for 14 days.  
-> 1.6. If the minimum thresholds for candidates or voters are not met, the registration period shall be extended in two-week intervals until both thresholds are met. Once met, the campaign period shall start and last for 14 days.  
+> 1.5. If, by the end of day 14, at least 100 candidates and 1,200 voters are registered, the campaign period shall commence and last for 14 days.  
+> 1.6. If the minimum thresholds for candidates or voters are not met, the registration period shall be extended in two-week intervals until both thresholds are met. Once met, the campaign period shall commence and last for 14 days.  
 > 1.7. On the first day after the 14-day campaign period, voters can vote to elect 50 Members in an open, inclusive and free election.  
 > 1.8. The election shall last 24 hours and use approval voting, allowing each voter to vote for multiple candidates.  
 > 1.9. The 50 candidates who received the most votes shall become Members and form the TG.  
@@ -32,7 +32,7 @@
 > 3.1. Maintain stability, law, and order throughout the transition period;  
 > 3.2. Exercise control over the armed forces, law enforcement, and judiciary during the transition period;  
 > 3.3. Collect new constitution drafts from the public within 10 weeks of formation, allowing anyone to submit a new constitution draft;  
-> 3.4. Organize a national referendum to ratify a new constitution after the 10-week period;
+> 3.4. Organize a national referendum to ratify a new constitution after the 10-week period;  
 > 3.5. Enable every citizen born in year 2006 or before to vote in the referendum;  
 > 3.6. Conduct the referendum using approval voting, allowing each citizen to vote for multiple constitution drafts;  
 > 3.7. Hold national elections to establish a new government in accordance with the ratified constitution within four weeks after the referendum; and  
