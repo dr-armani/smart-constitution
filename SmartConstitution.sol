@@ -39,7 +39,7 @@ contract SharedStorage {
     uint8 public constant N_MEMBERS = 50;
     uint256 public immutable startTime;
     uint256 public electionEnd;
-    address public neutral; // Address of the international oversight agent to find random voters
+    address public neutral; // Address of the trusted neutral entity to find random voters
     uint32 public addedVoterCount;
     address[] public candidateList;
     mapping(address => Candidate) public candidateInfo;
@@ -78,7 +78,7 @@ contract Formation is SharedStorage {
 
     address public currentLeaderAddress;
     uint256 public currentLeaderNumber; // Member number of the Current Leader
-    
+
     /**
     * @notice Neutral: Verify that (1957 <= yearOfBirth <= 2006).   
     * @param voterAddresses: Wallet addresses of the randomly selected voters 
@@ -100,8 +100,8 @@ contract Formation is SharedStorage {
 
     function addVoter(
         address[VOTER_BATCH] calldata voterAddresses, // 10 voters' addresses in a random order
-        bytes32[VOTER_BATCH] calldata voterHashes // 10 voters' hashes in a random order 
-    ) external { 
+        bytes32[VOTER_BATCH] calldata voterHashes // 10 voters' hashes in a random order
+    ) external {
         require(msg.sender == neutral, "Not authorized neutral");
         require(
             getCurrentPhase() == Phase.Registration,
@@ -508,7 +508,7 @@ contract Finance is SharedStorage {
             emit InterestRateUpdated(currentRate);
         }
 
-        return rank; 
+        return rank;
     }
     event MemberRateChanged(
         address indexed member,
