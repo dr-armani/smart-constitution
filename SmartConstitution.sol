@@ -3,7 +3,8 @@ pragma solidity ^0.8.0;
 
 enum Phase {
     Registration, // Days 1-14: Candidate and voter registration
-    Election, // 1 Day: Voting for the transitional government
+    Campaigning, // Days 15-28: Campaigning and debates
+    Election, // 1 Day: Voting for the members of the transitional government
     Governance, // 10 weeks: Collecting constitution drafts
     Referendum, // 1 Day: Referendum day
     Ratification // New Constitution Ratified
@@ -14,8 +15,10 @@ struct Candidate {
     string website;
     uint256 registeredAt;
     uint256 voteCount;
-    bool electedMember; // true if they became one of the 50 members
+    uint256 memberID; // 0 if not elected, Member Index if one of the 50 members
     uint256 leaderAt; // 0 if never led, otherwise the week number they led
+    uint256 activeProposal; // 0 if no active proposal, otherwise proposalId
+    uint256 submittedDraft; // 0 if not submitted a draft, otherwise draftlId
 }
 struct Payment {
     uint256 amount;
@@ -30,54 +33,57 @@ struct Proposal {
     uint256 withdrawnAt;
     uint8 yesVotes;
     Payment[] payments;
-    //mapping(address => uint256) memberVotedAt;
 }
 
 contract SharedStorage {
-    uint32 public constant RANDOM_VOTERS = 1200; // 1200 random voters
-    uint256 public constant REG_TIME = 2 weeks;
+    uint32 public constant RANDOM_VOTERS = 1200;
+    uint256 public constant CAMPAIGN_DURATION = 2 weeks;
     uint8 public constant N_MEMBERS = 50;
     uint256 public immutable startTime;
     uint256 public electionEnd;
+    uint256 public RegistrationEnd;
     address public neutral; // Address of the trusted neutral entity to find random voters
     uint32 public addedVoterCount;
     address[] public candidateList;
     mapping(address => Candidate) public candidateInfo;
 
-    Proposal[] public proposals; // proposals[0] is this transitional constitution.
-    uint256 public referendumEndTime;
+    Proposal[] public proposals; // proposals[0] is this transitional constitution
+    uint256 public referendumEnd;
 
     function getCurrentPhase() public returns (Phase) {
-        if (block.timestamp < electionEnd - 1 days) return Phase.Registration;
-        else if (block.timestamp < electionEnd)
-            if (
-                candidateList.length < 2 * N_MEMBERS ||
-                addedVoterCount < RANDOM_VOTERS
-            ) {
-                // Postpone election for two weeks if fewer than 100 candidates or fewer than 1200 voters
-                electionEnd = electionEnd + REG_TIME;
-                return Phase.Registration;
-            } else return Phase.Election;
-        else if (referendumEndTime == 0) return Phase.Governance;
-        else if (block.timestamp < referendumEndTime) return Phase.Referendum;
+        if (block.timestamp < RegistrationEnd) return Phase.Registration;
+        else if (
+            candidateList.length < 2 * N_MEMBERS ||
+            addedVoterCount < RANDOM_VOTERS
+        ) {
+            RegistrationEnd = 0;
+            // Extend registration until there are at least 100 candidates and 1200 voters
+            return Phase.Registration;
+        } else if (RegistrationEnd == 0) {
+            RegistrationEnd = block.timestamp;
+            electionEnd = RegistrationEnd + CAMPAIGN_DURATION + 1 days;
+            return Phase.Campaigning;
+        } else if (block.timestamp < electionEnd - 1) return Phase.Campaigning;
+        else if (block.timestamp < electionEnd) return Phase.Election;
+        else if (referendumEnd == 0) return Phase.Governance;
+        else if (block.timestamp < referendumEnd) return Phase.Referendum;
         else return Phase.Ratification;
         // else return Phase.Restart
     }
 }
 
 contract Formation is SharedStorage {
-    uint256 public constant LEAD_PERIOD = 1 weeks;
+    uint256 public constant LEAD_PERIOD = 2 weeks;
     uint256 public constant REG_FEE = 1 ether / 1000;
-    uint32 public constant VOTER_BATCH = 10;
+    uint32 private constant VOTER_BATCH = 10;
 
     mapping(bytes32 => bool) private isVoterHash; // Random voter hash
     mapping(address => uint256) private voteTime; // 0:not registered, 1:registered, >1:voted at timestamp
 
-    address[N_MEMBERS] public electedMembers;
     bool public membersElected = false;
 
-    address public currentLeaderAddress;
-    uint256 public currentLeaderNumber; // Member number of the Current Leader
+    address public LeaderAddress;
+    uint256 public LeaderId; // Member number of the Current Leader
 
     /**
     * @notice Neutral: Verify that (1957 <= yearOfBirth <= 2006).   
@@ -156,8 +162,8 @@ contract Formation is SharedStorage {
     /**
      * @notice Register as a candidate with required information
      * @param _fullName Candidate's full name
-     * @param _bio Brief biography of the candidate
-     * @param _website Additional relevant information (education, experience, etc.)
+     * @param _bio Brief biography of the candidate (education, experience, etc.)
+     * @param _website Website URL for the candidate
      */
 
     function registerAsCandidate(
@@ -193,8 +199,10 @@ contract Formation is SharedStorage {
             website: _website,
             registeredAt: block.timestamp,
             voteCount: 0,
-            electedMember: false,
-            leaderAt: 0
+            memberID: 0,
+            leaderAt: 0,
+            activeProposal: 0,
+            submittedDraft: 0
         });
 
         candidateList.push(msg.sender);
@@ -245,88 +253,78 @@ contract Formation is SharedStorage {
     }
     event VoteCast(address indexed voter);
 
-    function getElectionResults() external returns (address[N_MEMBERS] memory) {
+    function getElectionResults() external returns (address[] memory) {
         if (membersElected) {
-            return electedMembers;
+            return candidateList;
         }
         require(block.timestamp > electionEnd, "Call after election");
-        unchecked {
-            for (uint256 i = 1; i <= N_MEMBERS; i++) {
-                for (uint256 j = 0; j < candidateList.length - i; j++) {
-                    if (
-                        candidateInfo[candidateList[j]].voteCount >
-                        candidateInfo[candidateList[j + 1]].voteCount
-                    ) {
-                        (candidateList[j], candidateList[j + 1]) = (
-                            candidateList[j + 1],
-                            candidateList[j]
-                        );
-                    }
+        //unchecked {
+
+        for (uint256 i = 1; i <= N_MEMBERS; i++) {
+            for (uint256 j = candidateList.length - 1; i <= j; j--) {
+                if (
+                    candidateInfo[candidateList[j]].voteCount >
+                    candidateInfo[candidateList[j - 1]].voteCount
+                ) {
+                    (candidateList[j], candidateList[j - 1]) = (
+                        candidateList[j - 1],
+                        candidateList[j]
+                    );
                 }
-                electedMembers[i - 1] = candidateList[candidateList.length - i];
-                candidateInfo[candidateList[candidateList.length - i]]
-                    .electedMember = true;
             }
+
+            candidateInfo[candidateList[i - 1]].memberID = (i - 1);
         }
 
         membersElected = true;
 
-        currentLeaderAddress = electedMembers[0]; // = candidateList[candidateList.length - 1] ; Highest voted candidate
-        currentLeaderNumber = 0;
+        LeaderAddress = candidateList[0]; // = candidateList[candidateList.length - 1] ; Highest voted candidate
+        LeaderId = 0;
 
-        candidateInfo[currentLeaderAddress].leaderAt = block.timestamp;
+        candidateInfo[LeaderAddress].leaderAt = block.timestamp;
 
-        emit ElectionResults(electedMembers, currentLeaderAddress);
-        return electedMembers;
+        emit ElectionResults(candidateList, LeaderAddress);
+        return candidateList;
     }
-    event ElectionResults(
-        address[N_MEMBERS] indexed electedMembers,
-        address firstLeader
-    );
+    event ElectionResults(address[] indexed candidateList, address firstLeader);
 
     function changeLeader() external {
         require(membersElected, "No leader yet");
         require(
             block.timestamp >=
-                candidateInfo[currentLeaderAddress].leaderAt + LEAD_PERIOD,
+                candidateInfo[LeaderAddress].leaderAt + LEAD_PERIOD,
             "Current leader's term not finished"
         );
 
-        currentLeaderNumber++;
+        LeaderId++;
+        LeaderAddress = candidateList[LeaderId];
 
-        if (currentLeaderNumber >= electedMembers.length)
-            currentLeaderNumber = 0;
-
-        currentLeaderAddress = electedMembers[currentLeaderNumber];
-
-        candidateInfo[currentLeaderAddress].leaderAt = block.timestamp;
-        emit LeadershipChanged(currentLeaderAddress);
+        candidateInfo[LeaderAddress].leaderAt = block.timestamp;
+        emit LeadershipChanged(LeaderAddress);
     }
     event LeadershipChanged(address indexed newLeader);
 }
 
 contract Governance is SharedStorage {
     uint8 public constant SUPER_MAJORITY = 30;
-
-    mapping(address => uint256) public activeProposalByMember; // 0 if no active proposal, otherwise proposalId
     mapping(address => mapping(uint256 => uint256)) public memberVotedAt;
 
     function proposeProposal(
         string calldata _provisions,
         Payment[] calldata _payments
     ) external returns (uint256) {
-        require(
-            candidateInfo[msg.sender].electedMember,
-            "Only members can propose proposals"
-        );
         require(bytes(_provisions).length > 0, "Provisions required");
         require(
-            activeProposalByMember[msg.sender] == 0,
-            "Member already has an active proposal"
+            candidateInfo[msg.sender].memberID > 0,
+            "Only members can propose proposals"
+        );
+        require(
+            candidateInfo[msg.sender].activeProposal == 0,
+            "Has an active proposal"
         );
 
         uint256 proposalId = proposals.length;
-        activeProposalByMember[msg.sender] = proposalId;
+        candidateInfo[msg.sender].activeProposal = proposalId;
 
         proposals.push(); // Push empty proposal first
         Proposal storage newProposal = proposals[proposalId];
@@ -350,7 +348,7 @@ contract Governance is SharedStorage {
 
     function voteForProposal(uint256 proposalId) external returns (uint8) {
         require(
-            candidateInfo[msg.sender].electedMember,
+            candidateInfo[msg.sender].memberID > 0,
             "Only members can vote"
         );
         require(proposalId < proposals.length, "Invalid proposal ID");
@@ -370,7 +368,7 @@ contract Governance is SharedStorage {
         if (proposal.yesVotes >= SUPER_MAJORITY && proposal.executedAt == 0) {
             emit ProposalPassed(proposalId);
             proposal.executedAt = block.timestamp;
-            activeProposalByMember[proposal.proposer] = 0;
+            candidateInfo[proposal.proposer].activeProposal = 0;
             _executeProposal(proposalId);
         }
 
@@ -390,8 +388,7 @@ contract Governance is SharedStorage {
         require(proposal.withdrawnAt == 0, "Proposal already withdrawn");
 
         proposal.withdrawnAt = block.timestamp;
-        activeProposalByMember[msg.sender] = 0;
-
+        candidateInfo[msg.sender].activeProposal = 0;
         emit ProposalWithdrawn(proposalId);
     }
     event ProposalWithdrawn(uint256 indexed proposalId);
@@ -447,7 +444,7 @@ contract Finance is SharedStorage {
 
     function proposeRate(uint256 newRate) external returns (uint8 newRank) {
         require(
-            candidateInfo[msg.sender].electedMember,
+            candidateInfo[msg.sender].memberID > 0,
             "Only members can propose"
         );
         require(newRate <= 5000, "Rate > 50%"); // Max 50% APR in basis points
@@ -545,7 +542,7 @@ contract Referendum is SharedStorage {
     uint256 public constant SUBMISSION_FEE = 1 ether / 1000;
     uint8 public constant MIN_DRAFTS = 10;
     uint32 public constant MIN_VOTERS = 1_000_000;
-    uint32 public constant REF_VOTER_BATCH = 10; // voter batch size for the referendum
+    uint32 private constant VOTER_BATCH = 10; // voter batch size for the referendum
     uint256 public constant MAX_APPROVALS = 1000; // maximum registrar approval per member
     int256 public constant REQUIRED_SCORE = 10; // required approvals for each registrar
     uint256 public constant REQUIRED_REG = 2; // required number of registrations per voter
@@ -574,6 +571,11 @@ contract Referendum is SharedStorage {
     mapping(address => uint256) private memberApprovalCount; // count of nonzero votes per member
 
     function submitDraft(ConstitutionDraft memory _draft) external payable {
+        require(candidateInfo[msg.sender].memberID > 0, "Not a member");
+        require(
+            candidateInfo[msg.sender].submittedDraft == 0,
+            "Already submitted"
+        );
         require(getCurrentPhase() == Phase.Governance, "Wrong phase");
         require(bytes(_draft.description).length > 0, "Description required");
         require(
@@ -600,9 +602,9 @@ contract Referendum is SharedStorage {
         _draft.submittedAt = block.timestamp;
         _draft.voteCount = 0;
 
+        candidateInfo[msg.sender].submittedDraft = constitutionDrafts.length;
+        emit ConstitutionDraftSubmitted(constitutionDrafts.length, _draft);
         constitutionDrafts.push(_draft);
-
-        emit ConstitutionDraftSubmitted(constitutionDrafts.length - 1, _draft);
     }
     event ConstitutionDraftSubmitted(
         uint256 indexed draftId,
@@ -620,7 +622,7 @@ contract Referendum is SharedStorage {
     }
 
     function approveRegistrar(address registrar, int8 vote) external {
-        require(candidateInfo[msg.sender].electedMember, "Not a member");
+        require(candidateInfo[msg.sender].memberID > 0, "Not a member");
         require(vote >= -1 && vote <= 1, "Vote must be -1, 0, or 1");
 
         int8 oldVote = memberRegistrar[msg.sender][registrar];
@@ -664,8 +666,8 @@ contract Referendum is SharedStorage {
     */
 
     function registerVoterBatch(
-        address[REF_VOTER_BATCH] calldata voterAddresses, // 10 voter addresses in any order
-        bytes32[REF_VOTER_BATCH] calldata voterHashes // 10 voter hashes in any order
+        address[VOTER_BATCH] calldata voterAddresses, // 10 voter addresses in any order
+        bytes32[VOTER_BATCH] calldata voterHashes // 10 voter hashes in any order
     ) external {
         require(
             registrarScore[msg.sender] >= REQUIRED_SCORE,
@@ -708,7 +710,7 @@ contract Referendum is SharedStorage {
         emit VoterRegistered(voterAddresses, msg.sender, referendumVoterCount);
     }
     event VoterRegistered(
-        address[REF_VOTER_BATCH] indexed voter,
+        address[VOTER_BATCH] indexed voter,
         address registrar,
         uint256 referendumVoterCount
     );
@@ -733,7 +735,7 @@ contract Referendum is SharedStorage {
         require(ratifiedConstitutionId == 0, "Already ratified a constitution");
         require(constitutionDrafts.length > MIN_DRAFTS, "Not enough drafts");
         require(referendumVoterCount >= MIN_VOTERS, "Not enough voters");
-        referendumEndTime = block.timestamp + 1 days;
+        referendumEnd = block.timestamp + 1 days;
 
         emit ReferendumStarted();
     }
@@ -741,7 +743,7 @@ contract Referendum is SharedStorage {
     event ReferendumStarted();
 
     function voteInReferendum(uint256[] calldata _drafts) external {
-        require(block.timestamp < referendumEndTime, "Not in Referendum time");
+        require(block.timestamp < referendumEnd, "Not in Referendum time");
         require(
             _drafts.length <= constitutionDrafts.length,
             "Invalid draft list"
@@ -777,7 +779,7 @@ contract Referendum is SharedStorage {
             );
 
         require(
-            referendumEndTime > 0 && referendumEndTime < block.timestamp,
+            referendumEnd > 0 && referendumEnd < block.timestamp,
             "Call once after Referendum"
         );
 
@@ -812,8 +814,11 @@ contract Elections is SharedStorage {}
 contract SmartConstitution is Formation, Governance, Referendum, Finance {
     constructor(address neutralEntity, string memory interimConstitution) {
         neutral = neutralEntity;
+
         startTime = block.timestamp;
-        electionEnd = startTime + REG_TIME + 1;
+        RegistrationEnd = startTime + 4 weeks;
+        electionEnd = RegistrationEnd + CAMPAIGN_DURATION + 1 days;
+
         Proposal storage _proposal = proposals.push();
 
         _proposal.proposer = msg.sender;
