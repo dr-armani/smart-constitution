@@ -187,18 +187,17 @@ contract Formation is SharedStorage {
         require(msg.value >= REG_FEE, "Insufficient registration fee");
         require(
             getCurrentPhase() == Phase.Registration,
-            "Candidate registration period has ended."
+            "Registration period ended"
         );
         require(
             candidateInfo[msg.sender].registeredAt == 0,
             "Already registered"
         );
-        candidateInfo[msg.sender] = Candidate({
-            fullName: _fullName,
-            bio: _bio,
-            website: _website,
-            registeredAt: block.timestamp
-        });
+        Candidate storage candidate = candidateInfo[msg.sender];
+        candidate.fullName = _fullName;
+        candidate.bio = _bio;
+        candidate.website = _website;
+        candidate.registeredAt = block.timestamp;
 
         candidateList.push(msg.sender);
         emit CandidateRegistered(msg.sender, _fullName, _bio, _website);
@@ -670,13 +669,13 @@ contract Referendum is SharedStorage {
         );
         require(getCurrentPhase() == Phase.Governance, "Wrong phase");
         require(
-            voterHashes.length == REF_VOTER_BATCH &&
-                voterAddresses.length == REF_VOTER_BATCH,
+            voterHashes.length == VOTER_BATCH &&
+                voterAddresses.length == VOTER_BATCH,
             "Incorrect batch size"
         );
 
         // Check all hashes are new
-        for (uint8 i = 0; i < REF_VOTER_BATCH; i++) {
+        for (uint8 i = 0; i < VOTER_BATCH; i++) {
             if (voterRegistrars[voterHashes[i]][0] == address(0)) {
                 voterRegistrars[voterHashes[i]][0] = msg.sender;
             } else if (voterRegistrars[voterHashes[i]][1] == address(0)) {
@@ -691,7 +690,7 @@ contract Referendum is SharedStorage {
         }
 
         // Enable voting for all addresses
-        for (uint8 i = 0; i < REF_VOTER_BATCH; i++) {
+        for (uint8 i = 0; i < VOTER_BATCH; i++) {
             require(voterAddresses[i] != address(0), "Invalid voter address");
             require(
                 referendumVotingTime[voterAddresses[i]] < REQUIRED_REG,
@@ -700,7 +699,7 @@ contract Referendum is SharedStorage {
             referendumVotingTime[voterAddresses[i]]++;
         }
 
-        referendumVoterCount += REF_VOTER_BATCH;
+        referendumVoterCount += VOTER_BATCH;
 
         emit VoterRegistered(voterAddresses, msg.sender, referendumVoterCount);
     }

@@ -7,6 +7,19 @@
 		"abi": [
 			{
 				"inputs": [],
+				"name": "CAMPAIGN_DURATION",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
 				"name": "N_MEMBERS",
 				"outputs": [
 					{
@@ -33,7 +46,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "REG_TIME",
+				"name": "RegistrationEnd",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -93,13 +106,23 @@
 						"type": "uint256"
 					},
 					{
-						"internalType": "bool",
-						"name": "electedMember",
-						"type": "bool"
+						"internalType": "uint256",
+						"name": "memberID",
+						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
 						"name": "leaderAt",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "activeProposal",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "submittedDraft",
 						"type": "uint256"
 					}
 				],
@@ -210,7 +233,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "referendumEndTime",
+				"name": "referendumEnd",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -263,11 +286,11 @@
 	},
 	"sources": {
 		"SmartConstitution.sol": {
-			"keccak256": "0xdb5d09ec37f771c5cfec22a916481f9c631ed53ece50479a58379ac25fd8fe4a",
+			"keccak256": "0x89affe4bed7573f544d074e1a6c68312ed1ec22ef569cde78ed19ed45929d3bd",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://8c585f00eb3195a00c3f2c9c3f9f8b12e7536175566b5a4179ca4e59215d0cd8",
-				"dweb:/ipfs/Qmb36Pvdy8iutPwGaeuwtfLczocx52TeZ5JsZEqAdY1ZVv"
+				"bzz-raw://85e7d93308b2d9fe200111d25f4a4731e9401eee78b9dea72f8c3fb21db97195",
+				"dweb:/ipfs/QmfRjKU8qxJJgh4hpQfrGk7daephP4WgqWaJhW4BSvankh"
 			]
 		}
 	},
