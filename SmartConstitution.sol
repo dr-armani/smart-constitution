@@ -197,12 +197,7 @@ contract Formation is SharedStorage {
             fullName: _fullName,
             bio: _bio,
             website: _website,
-            registeredAt: block.timestamp,
-            voteCount: 0,
-            memberID: 0,
-            leaderAt: 0,
-            activeProposal: 0,
-            submittedDraft: 0
+            registeredAt: block.timestamp
         });
 
         candidateList.push(msg.sender);

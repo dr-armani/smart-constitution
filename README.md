@@ -31,9 +31,9 @@
 
 > 3.1. Maintain stability, law, and order throughout the transition period;  
 > 3.2. Exercise control over the armed forces, law enforcement, and judiciary during the transition period;  
-> 3.3. Prepare multiple constitution drafts within 10 weeks of formation, allowing any Member to propose a constitution draft;  
+> 3.3. Prepare multiple constitution drafts within 10 weeks of formation, allowing any Member to submit a constitution draft;  
 > 3.4. Organize a national referendum to ratify a new constitution after the 10-week period;  
-> 3.5. Enable every citizen born in year 2006 or eariler to vote for any of the proposed constitution drafts in the referendum;  
+> 3.5. Enable every citizen born in year 2006 or eariler to vote for any of the submitted constitution drafts in the referendum;  
 > 3.6. Conduct the referendum using approval voting, allowing each citizen to vote for multiple constitution drafts;  
 > 3.7. Hold national elections to establish a new government in accordance with the ratified constitution within four weeks of the referendum; and  
 > 3.8. Dissolve itself and transfer all power to the newly elected government within two weeks after the national elections.
