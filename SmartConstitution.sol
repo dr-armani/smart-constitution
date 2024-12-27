@@ -167,9 +167,9 @@ contract Formation is SharedStorage {
      */
 
     function registerAsCandidate(
-        string memory _fullName,
-        string memory _bio,
-        string memory _website
+        string calldata _fullName,
+        string calldata _bio,
+        string calldata _website
     ) external payable {
         require(
             bytes(_fullName).length > 0 && bytes(_fullName).length <= 100,
@@ -184,7 +184,11 @@ contract Formation is SharedStorage {
             "Invalid website"
         );
         require(msg.sender != address(0), "Invalid sender");
-        require(msg.value >= REG_FEE, "Insufficient registration fee");
+        if (msg.value >= REG_FEE) {
+            payable(msg.sender).transfer(msg.value - REG_FEE);
+        } else {
+            revert("Payment < registration fee");
+        }
         require(
             getCurrentPhase() == Phase.Registration,
             "Registration period ended"
