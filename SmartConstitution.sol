@@ -5,7 +5,7 @@ enum Phase {
     Registration, // Days 1-14: Candidate and voter registration
     Campaigning, // Days 15-28: Campaigning and debates
     Election, // 1 Day: Voting for the members of the transitional government
-    Governance, // 10 weeks: Collecting constitution drafts
+    Governance, // 10 weeks: Preparing constitution drafts
     Referendum, // 1 Day: Referendum day
     Ratification // New Constitution Ratified
 }
@@ -84,29 +84,21 @@ contract Formation is SharedStorage {
 
     address public LeaderAddress;
     uint256 public LeaderId; // Member number of the Current Leader
+    struct Demographic {
+        uint16 birthYear;
+        uint8 birthMonth;
+        bool gender;
+    }
 
     /**
-    * @notice Neutral: Verify that (1957 <= yearOfBirth <= 2006).   
-    * @param voterAddresses: Wallet addresses of the randomly selected voters 
-    * @param voterHashes: Hash of yearOfBirth(yyyy)+monthOfBirth(mm)+gender(male=0,female=1) 
-    * @notice Neutral: Calculate hash offchain in frontend: 
-
-    Example JavaScript Code: 
-    const crypto = require('crypto'); 
-    const yearOfBirth = 1995; // Before 2006 
-    const monthOfBirth = 6; // June
-    const gender = 1; // Female
-    if (yearOfBirth > 2006) { 
-        throw new Error("Must be born in or before 2006"); } 
-    const input = String(yearOfBirth) + String(monthOfBirth).padStart(2, '0') + String(gender);
-    console.log(input); // "2006061"
-    const hash = crypto.createHash('sha256').update(input).digest('hex'); 
-    console.log("Hash:", hash);
-    */
+     * @notice Neutral: Verify ID and birthdate (1957 <= yearOfBirth <= 2006).
+     * @param voterAddresses: Wallet addresses of the randomly selected voters
+     * @param voterDemos: yearOfBirth(yyyy),monthOfBirth(mm),gender(male=0,female=1)
+     */
 
     function addVoter(
         address[VOTER_BATCH] calldata voterAddresses, // 10 voters' addresses in a random order
-        bytes32[VOTER_BATCH] calldata voterHashes // 10 voters' hashes in a random order
+        Demographic[VOTER_BATCH] calldata voterDemos // 10 voters' demographics in a random order
     ) external {
         require(msg.sender == neutral, "Not authorized neutral");
         require(
@@ -118,18 +110,33 @@ contract Formation is SharedStorage {
             "Maximum number of voters reached."
         );
         require(
-            voterHashes.length == VOTER_BATCH &&
+            voterDemos.length == VOTER_BATCH &&
                 voterAddresses.length == VOTER_BATCH,
             "Incorrect batch size"
         );
 
+        bytes32 _hashDemo;
+
         // Check all hashes are new
         for (uint8 i = 0; i < VOTER_BATCH; i++) {
             require(
-                !isVoterHash[voterHashes[i]],
-                "Voter hash already registered"
+                1957 <= voterDemos[i].birthYear &&
+                    voterDemos[i].birthYear <= 2006,
+                "Wrong Year"
             );
-            isVoterHash[voterHashes[i]] = true;
+            require(
+                1 <= voterDemos[i].birthMonth && voterDemos[i].birthMonth <= 12,
+                "Invalid Month"
+            );
+            _hashDemo = keccak256(
+                abi.encodePacked(
+                    voterDemos[i].birthYear,
+                    voterDemos[i].birthMonth,
+                    voterDemos[i].gender
+                )
+            );
+            require(!isVoterHash[_hashDemo], "Voter hash already registered");
+            isVoterHash[_hashDemo] = true;
         }
 
         // Enable voting for all addresses
@@ -151,8 +158,15 @@ contract Formation is SharedStorage {
         uint256 addedVoterCount
     );
 
-    function getHashStatus(bytes32 voterHash) external view returns (bool) {
-        return isVoterHash[voterHash];
+    function getVoterStatus(
+        uint16 birthYear,
+        uint8 birthMonth,
+        bool gender
+    ) external view returns (bool) {
+        bytes32 _hashDemo = keccak256(
+            abi.encodePacked(birthYear, birthMonth, gender)
+        );
+        return isVoterHash[_hashDemo];
     }
 
     function getVoteTime(address voterAddress) external view returns (uint256) {
@@ -537,7 +551,7 @@ contract Finance is SharedStorage {
 
 contract Referendum is SharedStorage {
     uint256 public constant GOV_LENGTH = 10 weeks;
-    uint256 public constant SUBMISSION_FEE = 1 ether / 1000;
+    uint256 public constant SUBMISSION_FEE = 0;
     uint8 public constant MIN_DRAFTS = 10;
     uint32 public constant MIN_VOTERS = 1_000_000;
     uint32 private constant VOTER_BATCH = 10; // voter batch size for the referendum
@@ -549,7 +563,7 @@ contract Referendum is SharedStorage {
         string description; // Brief description or title
         string constitutionText; // Full text of the constitution
         string implementationCode; // Optional computer implementation
-        string submitterIdentity; // Name/pseudonym/org/group
+        string[] submitterIdentities; // Names/pseudonyms/organizations/groups
         bytes32 hashedOffChain; // Hash of above four fields
         string supportingMaterials; // IPFS hash for supporting files (PDF, video, etc.)
         uint256 submittedAt; // Time of submission
@@ -581,8 +595,8 @@ contract Referendum is SharedStorage {
             "constitutionText required"
         );
         require(
-            bytes(_draft.submitterIdentity).length > 0,
-            "Proposer name required"
+            _draft.submitterIdentities.length > 0,
+            "At least one submitter"
         );
         require(msg.value >= SUBMISSION_FEE, "Insufficient submission fee");
 
@@ -590,8 +604,7 @@ contract Referendum is SharedStorage {
             abi.encodePacked(
                 _draft.description,
                 _draft.implementationCode,
-                _draft.constitutionText,
-                _draft.submitterIdentity
+                _draft.constitutionText
             )
         );
 
@@ -639,27 +652,33 @@ contract Referendum is SharedStorage {
     }
 
     /**  
-    * @notice Members: Two (randomly assigned) registrars required for double registration.  
-    * @notice Registrar: Verify that (yearOfBirth <= 2006). 
+    * @notice Two different registrars required to double register each voter.  
+    * @notice Registrar: Verify ID and Age (yearOfBirth <= 2006). 
     * @param voterAddresses[i]: Wallet addresses of the verified voters 
     * @param voterHashes[i]: Hash of FirstName+LastName+DoB(YYYY/MM/DD)+SSN+gender(male=0,female=1) 
     * @notice Registrar: Calculate hash offchain in frontend: 
 
     Example JavaScript Code: 
-    const crypto = require('crypto'); 
+
+    const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
+
     const firstName = "John";
     const lastName = "Doe";
-    const yearOfBirth = 1995; // Before 2006 
-    const monthOfBirth = 6;   // 06
-    const dayOfBirth = 3;     // 03
-    const gender = 1;         // Female
-    const ssn = "123-45-6789";
+    const ssn = "123-45-6789"; // Include dashes
+    const yearOfBirth = 1995;  // Before 2006 
+    const monthOfBirth = 6;    // 06
+    const dayOfBirth = 3;      // 03
+    const gender = true;       // Female
+
     if (yearOfBirth > 2006) { 
-        throw new Error("Must be born in or before 2006"); } 
-    const dob = String(yearOfBirth) + String(monthOfBirth).padStart(2, '0') + String(dayOfBirth).padStart(2, '0')
-    const input = firstName + lastName + ssn + dob + String(gender) ; 
-    console.log(input); // "JohnDoe123-45-6789200606031" 
-    const hash = crypto.createHash('sha256').update(input).digest('hex'); 
+        throw new Error("Must be born in or before 2006");
+    }
+
+    const hash = keccak256(defaultAbiCoder.encode(
+        ["string", "string", "string", "uint16", "uint8", "uint8", "uint8", "bool"],
+        [firstName, lastName, ssn, yearOfBirth, monthOfBirth, dayOfBirth, gender]
+    ));
+
     console.log("Hash:", hash);
     */
 
