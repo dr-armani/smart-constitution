@@ -79,9 +79,9 @@
 								"type": "string"
 							},
 							{
-								"internalType": "string",
-								"name": "submitterIdentity",
-								"type": "string"
+								"internalType": "string[]",
+								"name": "submitterIdentities",
+								"type": "string[]"
 							},
 							{
 								"internalType": "bytes32",
@@ -140,9 +140,9 @@
 								"type": "string"
 							},
 							{
-								"internalType": "string",
-								"name": "submitterIdentity",
-								"type": "string"
+								"internalType": "string[]",
+								"name": "submitterIdentities",
+								"type": "string[]"
 							},
 							{
 								"internalType": "bytes32",
@@ -666,9 +666,26 @@
 						"type": "address[10]"
 					},
 					{
-						"internalType": "bytes32[10]",
-						"name": "voterHashes",
-						"type": "bytes32[10]"
+						"components": [
+							{
+								"internalType": "uint16",
+								"name": "birthYear",
+								"type": "uint16"
+							},
+							{
+								"internalType": "uint8",
+								"name": "birthMonth",
+								"type": "uint8"
+							},
+							{
+								"internalType": "bool",
+								"name": "gender",
+								"type": "bool"
+							}
+						],
+						"internalType": "struct Formation.Demographic[10]",
+						"name": "voterDemos",
+						"type": "tuple[10]"
 					}
 				],
 				"name": "addVoter",
@@ -681,9 +698,9 @@
 				"name": "addedVoterCount",
 				"outputs": [
 					{
-						"internalType": "uint32",
+						"internalType": "uint16",
 						"name": "",
-						"type": "uint32"
+						"type": "uint16"
 					}
 				],
 				"stateMutability": "view",
@@ -738,14 +755,14 @@
 						"type": "uint256"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint16",
 						"name": "voteCount",
-						"type": "uint256"
+						"type": "uint16"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint8",
 						"name": "memberID",
-						"type": "uint256"
+						"type": "uint8"
 					},
 					{
 						"internalType": "uint256",
@@ -753,14 +770,14 @@
 						"type": "uint256"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint16",
 						"name": "activeProposal",
-						"type": "uint256"
+						"type": "uint16"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint16",
 						"name": "submittedDraft",
-						"type": "uint256"
+						"type": "uint16"
 					}
 				],
 				"stateMutability": "view",
@@ -815,11 +832,6 @@
 					{
 						"internalType": "string",
 						"name": "implementationCode",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "submitterIdentity",
 						"type": "string"
 					},
 					{
@@ -918,14 +930,14 @@
 								"type": "uint256"
 							},
 							{
-								"internalType": "uint256",
+								"internalType": "uint16",
 								"name": "voteCount",
-								"type": "uint256"
+								"type": "uint16"
 							},
 							{
-								"internalType": "uint256",
+								"internalType": "uint8",
 								"name": "memberID",
-								"type": "uint256"
+								"type": "uint8"
 							},
 							{
 								"internalType": "uint256",
@@ -933,78 +945,17 @@
 								"type": "uint256"
 							},
 							{
-								"internalType": "uint256",
+								"internalType": "uint16",
 								"name": "activeProposal",
-								"type": "uint256"
+								"type": "uint16"
 							},
 							{
-								"internalType": "uint256",
+								"internalType": "uint16",
 								"name": "submittedDraft",
-								"type": "uint256"
+								"type": "uint16"
 							}
 						],
 						"internalType": "struct Candidate",
-						"name": "",
-						"type": "tuple"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "draftId",
-						"type": "uint256"
-					}
-				],
-				"name": "getConstitution",
-				"outputs": [
-					{
-						"components": [
-							{
-								"internalType": "string",
-								"name": "description",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "constitutionText",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "implementationCode",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "submitterIdentity",
-								"type": "string"
-							},
-							{
-								"internalType": "bytes32",
-								"name": "hashedOffChain",
-								"type": "bytes32"
-							},
-							{
-								"internalType": "string",
-								"name": "supportingMaterials",
-								"type": "string"
-							},
-							{
-								"internalType": "uint256",
-								"name": "submittedAt",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "voteCount",
-								"type": "uint256"
-							}
-						],
-						"internalType": "struct Referendum.ConstitutionDraft",
 						"name": "",
 						"type": "tuple"
 					}
@@ -1039,98 +990,6 @@
 				"type": "function"
 			},
 			{
-				"inputs": [
-					{
-						"internalType": "bytes32",
-						"name": "voterHash",
-						"type": "bytes32"
-					}
-				],
-				"name": "getHashStatus",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "proposalId",
-						"type": "uint256"
-					}
-				],
-				"name": "getProposalInfo",
-				"outputs": [
-					{
-						"components": [
-							{
-								"internalType": "address",
-								"name": "proposer",
-								"type": "address"
-							},
-							{
-								"internalType": "string",
-								"name": "provisions",
-								"type": "string"
-							},
-							{
-								"internalType": "uint256",
-								"name": "proposedAt",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "executedAt",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "withdrawnAt",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint8",
-								"name": "yesVotes",
-								"type": "uint8"
-							},
-							{
-								"components": [
-									{
-										"internalType": "uint256",
-										"name": "amount",
-										"type": "uint256"
-									},
-									{
-										"internalType": "address",
-										"name": "recipient",
-										"type": "address"
-									},
-									{
-										"internalType": "string",
-										"name": "reason",
-										"type": "string"
-									}
-								],
-								"internalType": "struct Payment[]",
-								"name": "payments",
-								"type": "tuple[]"
-							}
-						],
-						"internalType": "struct Proposal",
-						"name": "",
-						"type": "tuple"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
 				"inputs": [],
 				"name": "getReferendumResults",
 				"outputs": [
@@ -1157,9 +1016,9 @@
 								"type": "string"
 							},
 							{
-								"internalType": "string",
-								"name": "submitterIdentity",
-								"type": "string"
+								"internalType": "string[]",
+								"name": "submitterIdentities",
+								"type": "string[]"
 							},
 							{
 								"internalType": "bytes32",
@@ -1193,55 +1052,27 @@
 			{
 				"inputs": [
 					{
-						"internalType": "bytes32",
-						"name": "voterHash",
-						"type": "bytes32"
-					}
-				],
-				"name": "getRegistrarsOfHash",
-				"outputs": [
+						"internalType": "uint16",
+						"name": "birthYear",
+						"type": "uint16"
+					},
 					{
-						"internalType": "address[2]",
-						"name": "",
-						"type": "address[2]"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
+						"internalType": "uint8",
+						"name": "birthMonth",
+						"type": "uint8"
+					},
 					{
-						"internalType": "address",
-						"name": "voterAddress",
-						"type": "address"
-					}
-				],
-				"name": "getVoteTime",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "voterAddress",
-						"type": "address"
+						"internalType": "bool",
+						"name": "gender",
+						"type": "bool"
 					}
 				],
 				"name": "getVoterStatus",
 				"outputs": [
 					{
-						"internalType": "uint256",
+						"internalType": "bool",
 						"name": "",
-						"type": "uint256"
+						"type": "bool"
 					}
 				],
 				"stateMutability": "view",
@@ -1310,12 +1141,12 @@
 						"type": "uint256"
 					}
 				],
-				"name": "memberVotedAt",
+				"name": "memberVoted",
 				"outputs": [
 					{
-						"internalType": "uint256",
+						"internalType": "bool",
 						"name": "",
-						"type": "uint256"
+						"type": "bool"
 					}
 				],
 				"stateMutability": "view",
@@ -1382,18 +1213,13 @@
 					},
 					{
 						"internalType": "uint256",
-						"name": "proposedAt",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
 						"name": "executedAt",
 						"type": "uint256"
 					},
 					{
-						"internalType": "uint256",
-						"name": "withdrawnAt",
-						"type": "uint256"
+						"internalType": "bool",
+						"name": "withdrawn",
+						"type": "bool"
 					},
 					{
 						"internalType": "uint8",
@@ -1608,9 +1434,9 @@
 								"type": "string"
 							},
 							{
-								"internalType": "string",
-								"name": "submitterIdentity",
-								"type": "string"
+								"internalType": "string[]",
+								"name": "submitterIdentities",
+								"type": "string[]"
 							},
 							{
 								"internalType": "bytes32",
@@ -1641,19 +1467,6 @@
 				"name": "submitDraft",
 				"outputs": [],
 				"stateMutability": "payable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "treasuryReserve",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -1718,10 +1531,10 @@
 		"devdoc": {
 			"kind": "dev",
 			"methods": {
-				"addVoter(address[10],bytes32[10])": {
+				"addVoter(address[10],(uint16,uint8,bool)[10])": {
 					"params": {
-						"voterAddresses": ": Wallet addresses of the randomly selected voters ",
-						"voterHashes": ": Hash of yearOfBirth(yyyy)+monthOfBirth(mm)+gender(male=0,female=1) "
+						"voterAddresses": ": Wallet addresses of the randomly selected voters",
+						"voterDemos": ": yearOfBirth(yyyy),monthOfBirth(mm),gender(male=0,female=1)"
 					}
 				},
 				"registerAsCandidate(string,string,string)": {
@@ -1736,12 +1549,6 @@
 						"voterAddresses": "[i]: Wallet addresses of the verified voters ",
 						"voterHashes": "[i]: Hash of FirstName+LastName+DoB(YYYY/MM/DD)+SSN+gender(male=0,female=1) "
 					}
-				},
-				"treasuryReserve()": {
-					"details": "The contract balance is publicly visible on-chain",
-					"returns": {
-						"_0": "balance Current contract balance"
-					}
 				}
 			},
 			"version": 1
@@ -1749,17 +1556,14 @@
 		"userdoc": {
 			"kind": "user",
 			"methods": {
-				"addVoter(address[10],bytes32[10])": {
-					"notice": "Neutral: Verify that (1957 <= yearOfBirth <= 2006).   Neutral: Calculate hash offchain in frontend:  Example JavaScript Code:  const crypto = require('crypto');  const yearOfBirth = 1995; // Before 2006  const monthOfBirth = 6; // June const gender = 1; // Female if (yearOfBirth > 2006) {  throw new Error(\"Must be born in or before 2006\"); }  const input = String(yearOfBirth) + String(monthOfBirth).padStart(2, '0') + String(gender); console.log(input); // \"2006061\" const hash = crypto.createHash('sha256').update(input).digest('hex');  console.log(\"Hash:\", hash);"
+				"addVoter(address[10],(uint16,uint8,bool)[10])": {
+					"notice": "Neutral: Verify ID and birthdate (1957 <= yearOfBirth <= 2006)."
 				},
 				"registerAsCandidate(string,string,string)": {
 					"notice": "Register as a candidate with required information"
 				},
 				"registerVoterBatch(address[10],bytes32[10])": {
-					"notice": "Members: Two (randomly assigned) registrars required for double registration.  Registrar: Verify that (yearOfBirth <= 2006). Registrar: Calculate hash offchain in frontend:  Example JavaScript Code:  const crypto = require('crypto');  const firstName = \"John\"; const lastName = \"Doe\"; const yearOfBirth = 1995; // Before 2006  const monthOfBirth = 6;   // 06 const dayOfBirth = 3;     // 03 const gender = 1;         // Female const ssn = \"123-45-6789\"; if (yearOfBirth > 2006) {  throw new Error(\"Must be born in or before 2006\"); }  const dob = String(yearOfBirth) + String(monthOfBirth).padStart(2, '0') + String(dayOfBirth).padStart(2, '0') const input = firstName + lastName + ssn + dob + String(gender) ;  console.log(input); // \"JohnDoe123-45-6789200606031\"  const hash = crypto.createHash('sha256').update(input).digest('hex');  console.log(\"Hash:\", hash);"
-				},
-				"treasuryReserve()": {
-					"notice": "Returns contract balance"
+					"notice": "Two different registrars required to double register each voter.  Registrar: Verify ID and Age (yearOfBirth <= 2006). Registrar: Calculate hash offchain in frontend:  Example JavaScript Code:  const { keccak256, defaultAbiCoder } = require('ethers/lib/utils'); const firstName = \"John\"; const lastName = \"Doe\"; const ssn = \"123-45-6789\"; // Include dashes const yearOfBirth = 1995;  // Before 2006  const monthOfBirth = 6;    // 06 const dayOfBirth = 3;      // 03 const gender = true;       // Female if (yearOfBirth > 2006) {  throw new Error(\"Must be born in or before 2006\"); } const hash = keccak256(defaultAbiCoder.encode( [\"string\", \"string\", \"string\", \"uint16\", \"uint8\", \"uint8\", \"uint8\", \"bool\"], [firstName, lastName, ssn, yearOfBirth, monthOfBirth, dayOfBirth, gender] )); console.log(\"Hash:\", hash);"
 				}
 			},
 			"version": 1
@@ -1782,11 +1586,11 @@
 	},
 	"sources": {
 		"SmartConstitution.sol": {
-			"keccak256": "0x89affe4bed7573f544d074e1a6c68312ed1ec22ef569cde78ed19ed45929d3bd",
+			"keccak256": "0x9f62057dcc1609db96d50e0839f6354f3458bf05392c349fcd078aed64348224",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://85e7d93308b2d9fe200111d25f4a4731e9401eee78b9dea72f8c3fb21db97195",
-				"dweb:/ipfs/QmfRjKU8qxJJgh4hpQfrGk7daephP4WgqWaJhW4BSvankh"
+				"bzz-raw://c1192a3a68e38bfeed15b59401282d6170e945f5ef614f80e0f0f61d2608db8b",
+				"dweb:/ipfs/QmW3Pi5mtWJaLypBLidf8TQQfgJQeGx7bNbiimSYmTEjuQ"
 			]
 		}
 	},
