@@ -8,13 +8,13 @@
 			{
 				"inputs": [
 					{
-						"internalType": "address",
-						"name": "neutralEntity",
-						"type": "address"
+						"internalType": "address[3]",
+						"name": "_neutralAgents",
+						"type": "address[3]"
 					},
 					{
 						"internalType": "string",
-						"name": "interimConstitution",
+						"name": "_interimConstitution",
 						"type": "string"
 					}
 				],
@@ -556,6 +556,19 @@
 			},
 			{
 				"inputs": [],
+				"name": "NEUTRAL_AGENTS",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
 				"name": "N_MEMBERS",
 				"outputs": [
 					{
@@ -572,9 +585,9 @@
 				"name": "RANDOM_VOTERS",
 				"outputs": [
 					{
-						"internalType": "uint32",
+						"internalType": "uint16",
 						"name": "",
-						"type": "uint32"
+						"type": "uint16"
 					}
 				],
 				"stateMutability": "view",
@@ -701,6 +714,25 @@
 						"internalType": "uint16",
 						"name": "",
 						"type": "uint16"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "agents",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
 					}
 				],
 				"stateMutability": "view",
@@ -1052,6 +1084,11 @@
 			{
 				"inputs": [
 					{
+						"internalType": "address",
+						"name": "agentAddress",
+						"type": "address"
+					},
+					{
 						"internalType": "uint16",
 						"name": "birthYear",
 						"type": "uint16"
@@ -1097,6 +1134,25 @@
 						"internalType": "uint256",
 						"name": "startedAt",
 						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "isAgent",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
 					}
 				],
 				"stateMutability": "view",
@@ -1160,19 +1216,6 @@
 						"internalType": "bool",
 						"name": "",
 						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "neutral",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
 					}
 				],
 				"stateMutability": "view",
@@ -1332,6 +1375,25 @@
 			{
 				"inputs": [
 					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "referendumVotingTime",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
 						"internalType": "string",
 						"name": "_fullName",
 						"type": "string"
@@ -1368,6 +1430,25 @@
 				"name": "registerVoterBatch",
 				"outputs": [],
 				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "registrarScore",
+				"outputs": [
+					{
+						"internalType": "int256",
+						"name": "",
+						"type": "int256"
+					}
+				],
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -1460,7 +1541,7 @@
 							}
 						],
 						"internalType": "struct Referendum.ConstitutionDraft",
-						"name": "_draft",
+						"name": "draft",
 						"type": "tuple"
 					}
 				],
@@ -1517,6 +1598,49 @@
 			{
 				"inputs": [
 					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "voteTime",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "voterRegistrars",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
 						"internalType": "uint256",
 						"name": "proposalId",
 						"type": "uint256"
@@ -1545,9 +1669,16 @@
 					}
 				},
 				"registerVoterBatch(address[10],bytes32[10])": {
+					"details": "Calculate each hash offchain in frontend:  JavaScript Code:  const { keccak256, defaultAbiCoder } = require('ethers/lib/utils'); const firstName = \"John\"; const lastName = \"Doe\"; const ssn = \"123-45-6789\"; // Include dashes const yearOfBirth = 1995;  // Before 2006  const monthOfBirth = 6;    // 06 const dayOfBirth = 3;      // 03 const gender = true;       // Female if (yearOfBirth > 2006) {  throw new Error(\"Must be born in or before 2006\"); } const hash = keccak256(defaultAbiCoder.encode( [\"string\", \"string\", \"string\", \"uint16\", \"uint8\", \"uint8\", \"uint8\", \"bool\"], [firstName, lastName, ssn, yearOfBirth, monthOfBirth, dayOfBirth, gender] )); console.log(\"Hash:\", hash);",
 					"params": {
 						"voterAddresses": "[i]: Wallet addresses of the verified voters ",
 						"voterHashes": "[i]: Hash of FirstName+LastName+DoB(YYYY/MM/DD)+SSN+gender(male=0,female=1) "
+					}
+				},
+				"submitDraft((string,string,string,string[],bytes32,string,uint256,uint256))": {
+					"details": "Calculate the hash offchain in frontend. JavaScript Code:  const { keccak256, defaultAbiCoder } = require('ethers/lib/utils'); const description = \"The Modern Democratic Constitution of Liberal Republic\"; const constitutionText = \" Article 1. The full text of the constitution draft is in this field. \\n  Article 2. The longer texts consume more gas.\"; const implementationCode = \"\";  const hashedOffChain = keccak256(defaultAbiCoder.encode( [\"string\", \"string\", \"string\"], [description, constitutionText, implementationCode] )); console.log(\"Hash:\", hashedOffChain);",
+					"params": {
+						"draft": "The input should have the following fields: struct ConstitutionDraft { string description; // Brief description or title (required) string constitutionText; // Full text of the constitution (required) string implementationCode; // Computer implementation (optional) string[] submitterIdentities; // Names/pseudonyms/organizations/groups bytes32 hashedOffChain; // Hash of above four fields (Instructions below) string supportingMaterials; // IPFS hash for supporting files (PDF, video, etc.) uint256 submittedAt; // Time of submission (leave 0) uint256 voteCount; // Number of people voted for this draft (leave 0) }"
 					}
 				}
 			},
@@ -1557,13 +1688,16 @@
 			"kind": "user",
 			"methods": {
 				"addVoter(address[10],(uint16,uint8,bool)[10])": {
-					"notice": "Neutral: Verify ID and birthdate (1957 <= yearOfBirth <= 2006)."
+					"notice": "Neutral Agent: Verify ID and birthdate (1957 <= yearOfBirth <= 2006)."
 				},
 				"registerAsCandidate(string,string,string)": {
 					"notice": "Register as a candidate with required information"
 				},
 				"registerVoterBatch(address[10],bytes32[10])": {
-					"notice": "Two different registrars required to double register each voter.  Registrar: Verify ID and Age (yearOfBirth <= 2006). Registrar: Calculate hash offchain in frontend:  Example JavaScript Code:  const { keccak256, defaultAbiCoder } = require('ethers/lib/utils'); const firstName = \"John\"; const lastName = \"Doe\"; const ssn = \"123-45-6789\"; // Include dashes const yearOfBirth = 1995;  // Before 2006  const monthOfBirth = 6;    // 06 const dayOfBirth = 3;      // 03 const gender = true;       // Female if (yearOfBirth > 2006) {  throw new Error(\"Must be born in or before 2006\"); } const hash = keccak256(defaultAbiCoder.encode( [\"string\", \"string\", \"string\", \"uint16\", \"uint8\", \"uint8\", \"uint8\", \"bool\"], [firstName, lastName, ssn, yearOfBirth, monthOfBirth, dayOfBirth, gender] )); console.log(\"Hash:\", hash);"
+					"notice": "Two different registrars required to double register each voter.  Registrar: Verify ID and Age (yearOfBirth <= 2006). "
+				},
+				"submitDraft((string,string,string,string[],bytes32,string,uint256,uint256))": {
+					"notice": "This function enables each Member to submit one constitution draft."
 				}
 			},
 			"version": 1
@@ -1586,11 +1720,11 @@
 	},
 	"sources": {
 		"SmartConstitution.sol": {
-			"keccak256": "0x9f62057dcc1609db96d50e0839f6354f3458bf05392c349fcd078aed64348224",
+			"keccak256": "0xaae2a01d67b47bfcf2b98e759df58eb3550caa191f83c14918fae8651996078d",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://c1192a3a68e38bfeed15b59401282d6170e945f5ef614f80e0f0f61d2608db8b",
-				"dweb:/ipfs/QmW3Pi5mtWJaLypBLidf8TQQfgJQeGx7bNbiimSYmTEjuQ"
+				"bzz-raw://f6f1f67a91a69c75a710d3427223f8f70eb13e5b48f5fb96ce02bcd39b81a213",
+				"dweb:/ipfs/QmeBSHJEnUiam8SS5tpdbS1cxTJyxMf1rWW1ZGTe6K2FnJ"
 			]
 		}
 	},

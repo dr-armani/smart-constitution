@@ -71,7 +71,7 @@ contract Formation is SharedStorage {
     uint8 public constant NEUTRAL_AGENTS = 3;
     uint256 public constant LEAD_PERIOD = 2 weeks;
     uint256 public constant REG_FEE = 1 ether / 1000;
-    uint16 public constant VOTER_BATCH = 10;
+    uint16 private constant VOTER_BATCH = 10;
 
     address[NEUTRAL_AGENTS] public agents;
     mapping(address => bool) public isAgent;
@@ -547,7 +547,7 @@ contract Referendum is SharedStorage {
     uint256 public constant SUBMISSION_FEE = 0;
     uint8 public constant MIN_DRAFTS = 10;
     uint32 public constant MIN_VOTERS = 1_000_000;
-    uint32 public constant VOTER_BATCH = 10; // voter batch size for the referendum
+    uint32 private constant VOTER_BATCH = 10; // voter batch size for the referendum
     uint256 public constant MAX_APPROVALS = 1000; // maximum registrar approval per member
     int256 public constant REQUIRED_SCORE = 10; // required approvals for each registrar
     uint256 public constant REQUIRED_REG = 2; // required number of registrations per voter
@@ -854,6 +854,7 @@ contract Referendum is SharedStorage {
 }
 
 // contract Elections is SharedStorage {}
+
 
 contract SmartConstitution is Formation, Governance, Referendum, Finance {
     uint256 public immutable startTime;

@@ -134,9 +134,9 @@
 				"name": "RANDOM_VOTERS",
 				"outputs": [
 					{
-						"internalType": "uint32",
+						"internalType": "uint16",
 						"name": "",
-						"type": "uint32"
+						"type": "uint16"
 					}
 				],
 				"stateMutability": "view",
@@ -350,63 +350,11 @@
 			},
 			{
 				"inputs": [],
-				"name": "neutral",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
 				"name": "noRates",
 				"outputs": [
 					{
 						"internalType": "uint8",
 						"name": "",
-						"type": "uint8"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"name": "proposals",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "proposer",
-						"type": "address"
-					},
-					{
-						"internalType": "string",
-						"name": "provisions",
-						"type": "string"
-					},
-					{
-						"internalType": "uint256",
-						"name": "executedAt",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bool",
-						"name": "withdrawn",
-						"type": "bool"
-					},
-					{
-						"internalType": "uint8",
-						"name": "yesVotes",
 						"type": "uint8"
 					}
 				],
@@ -468,19 +416,6 @@
 				],
 				"stateMutability": "view",
 				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "startTime",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
 			}
 		],
 		"devdoc": {
@@ -511,11 +446,11 @@
 	},
 	"sources": {
 		"SmartConstitution.sol": {
-			"keccak256": "0x9f62057dcc1609db96d50e0839f6354f3458bf05392c349fcd078aed64348224",
+			"keccak256": "0xaae2a01d67b47bfcf2b98e759df58eb3550caa191f83c14918fae8651996078d",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://c1192a3a68e38bfeed15b59401282d6170e945f5ef614f80e0f0f61d2608db8b",
-				"dweb:/ipfs/QmW3Pi5mtWJaLypBLidf8TQQfgJQeGx7bNbiimSYmTEjuQ"
+				"bzz-raw://f6f1f67a91a69c75a710d3427223f8f70eb13e5b48f5fb96ce02bcd39b81a213",
+				"dweb:/ipfs/QmeBSHJEnUiam8SS5tpdbS1cxTJyxMf1rWW1ZGTe6K2FnJ"
 			]
 		}
 	},
