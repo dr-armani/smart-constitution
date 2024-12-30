@@ -32,9 +32,9 @@
 								"type": "string"
 							},
 							{
-								"internalType": "string",
-								"name": "submitterIdentity",
-								"type": "string"
+								"internalType": "string[]",
+								"name": "submitterIdentities",
+								"type": "string[]"
 							},
 							{
 								"internalType": "bytes32",
@@ -93,9 +93,9 @@
 								"type": "string"
 							},
 							{
-								"internalType": "string",
-								"name": "submitterIdentity",
-								"type": "string"
+								"internalType": "string[]",
+								"name": "submitterIdentities",
+								"type": "string[]"
 							},
 							{
 								"internalType": "bytes32",
@@ -319,9 +319,9 @@
 				"name": "addedVoterCount",
 				"outputs": [
 					{
-						"internalType": "uint32",
+						"internalType": "uint16",
 						"name": "",
-						"type": "uint32"
+						"type": "uint16"
 					}
 				],
 				"stateMutability": "view",
@@ -376,14 +376,14 @@
 						"type": "uint256"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint16",
 						"name": "voteCount",
-						"type": "uint256"
+						"type": "uint16"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint8",
 						"name": "memberID",
-						"type": "uint256"
+						"type": "uint8"
 					},
 					{
 						"internalType": "uint256",
@@ -391,14 +391,14 @@
 						"type": "uint256"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint16",
 						"name": "activeProposal",
-						"type": "uint256"
+						"type": "uint16"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint16",
 						"name": "submittedDraft",
-						"type": "uint256"
+						"type": "uint16"
 					}
 				],
 				"stateMutability": "view",
@@ -449,11 +449,6 @@
 						"type": "string"
 					},
 					{
-						"internalType": "string",
-						"name": "submitterIdentity",
-						"type": "string"
-					},
-					{
 						"internalType": "bytes32",
 						"name": "hashedOffChain",
 						"type": "bytes32"
@@ -485,67 +480,6 @@
 						"internalType": "uint256",
 						"name": "",
 						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "draftId",
-						"type": "uint256"
-					}
-				],
-				"name": "getConstitution",
-				"outputs": [
-					{
-						"components": [
-							{
-								"internalType": "string",
-								"name": "description",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "constitutionText",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "implementationCode",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "submitterIdentity",
-								"type": "string"
-							},
-							{
-								"internalType": "bytes32",
-								"name": "hashedOffChain",
-								"type": "bytes32"
-							},
-							{
-								"internalType": "string",
-								"name": "supportingMaterials",
-								"type": "string"
-							},
-							{
-								"internalType": "uint256",
-								"name": "submittedAt",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "voteCount",
-								"type": "uint256"
-							}
-						],
-						"internalType": "struct Referendum.ConstitutionDraft",
-						"name": "",
-						"type": "tuple"
 					}
 				],
 				"stateMutability": "view",
@@ -591,9 +525,9 @@
 								"type": "string"
 							},
 							{
-								"internalType": "string",
-								"name": "submitterIdentity",
-								"type": "string"
+								"internalType": "string[]",
+								"name": "submitterIdentities",
+								"type": "string[]"
 							},
 							{
 								"internalType": "bytes32",
@@ -622,44 +556,6 @@
 					}
 				],
 				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "bytes32",
-						"name": "voterHash",
-						"type": "bytes32"
-					}
-				],
-				"name": "getRegistrarsOfHash",
-				"outputs": [
-					{
-						"internalType": "address[2]",
-						"name": "",
-						"type": "address[2]"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "voterAddress",
-						"type": "address"
-					}
-				],
-				"name": "getVoterStatus",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -697,18 +593,13 @@
 					},
 					{
 						"internalType": "uint256",
-						"name": "proposedAt",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
 						"name": "executedAt",
 						"type": "uint256"
 					},
 					{
-						"internalType": "uint256",
-						"name": "withdrawnAt",
-						"type": "uint256"
+						"internalType": "bool",
+						"name": "withdrawn",
+						"type": "bool"
 					},
 					{
 						"internalType": "uint8",
@@ -816,9 +707,9 @@
 								"type": "string"
 							},
 							{
-								"internalType": "string",
-								"name": "submitterIdentity",
-								"type": "string"
+								"internalType": "string[]",
+								"name": "submitterIdentities",
+								"type": "string[]"
 							},
 							{
 								"internalType": "bytes32",
@@ -881,7 +772,7 @@
 			"kind": "user",
 			"methods": {
 				"registerVoterBatch(address[10],bytes32[10])": {
-					"notice": "Members: Two (randomly assigned) registrars required for double registration.  Registrar: Verify that (yearOfBirth <= 2006). Registrar: Calculate hash offchain in frontend:  Example JavaScript Code:  const crypto = require('crypto');  const firstName = \"John\"; const lastName = \"Doe\"; const yearOfBirth = 1995; // Before 2006  const monthOfBirth = 6;   // 06 const dayOfBirth = 3;     // 03 const gender = 1;         // Female const ssn = \"123-45-6789\"; if (yearOfBirth > 2006) {  throw new Error(\"Must be born in or before 2006\"); }  const dob = String(yearOfBirth) + String(monthOfBirth).padStart(2, '0') + String(dayOfBirth).padStart(2, '0') const input = firstName + lastName + ssn + dob + String(gender) ;  console.log(input); // \"JohnDoe123-45-6789200606031\"  const hash = crypto.createHash('sha256').update(input).digest('hex');  console.log(\"Hash:\", hash);"
+					"notice": "Two different registrars required to double register each voter.  Registrar: Verify ID and Age (yearOfBirth <= 2006). Registrar: Calculate hash offchain in frontend:  Example JavaScript Code:  const { keccak256, defaultAbiCoder } = require('ethers/lib/utils'); const firstName = \"John\"; const lastName = \"Doe\"; const ssn = \"123-45-6789\"; // Include dashes const yearOfBirth = 1995;  // Before 2006  const monthOfBirth = 6;    // 06 const dayOfBirth = 3;      // 03 const gender = true;       // Female if (yearOfBirth > 2006) {  throw new Error(\"Must be born in or before 2006\"); } const hash = keccak256(defaultAbiCoder.encode( [\"string\", \"string\", \"string\", \"uint16\", \"uint8\", \"uint8\", \"uint8\", \"bool\"], [firstName, lastName, ssn, yearOfBirth, monthOfBirth, dayOfBirth, gender] )); console.log(\"Hash:\", hash);"
 				}
 			},
 			"version": 1
@@ -904,11 +795,11 @@
 	},
 	"sources": {
 		"SmartConstitution.sol": {
-			"keccak256": "0x89affe4bed7573f544d074e1a6c68312ed1ec22ef569cde78ed19ed45929d3bd",
+			"keccak256": "0x9f62057dcc1609db96d50e0839f6354f3458bf05392c349fcd078aed64348224",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://85e7d93308b2d9fe200111d25f4a4731e9401eee78b9dea72f8c3fb21db97195",
-				"dweb:/ipfs/QmfRjKU8qxJJgh4hpQfrGk7daephP4WgqWaJhW4BSvankh"
+				"bzz-raw://c1192a3a68e38bfeed15b59401282d6170e945f5ef614f80e0f0f61d2608db8b",
+				"dweb:/ipfs/QmW3Pi5mtWJaLypBLidf8TQQfgJQeGx7bNbiimSYmTEjuQ"
 			]
 		}
 	},

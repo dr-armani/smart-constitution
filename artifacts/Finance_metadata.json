@@ -160,9 +160,9 @@
 				"name": "addedVoterCount",
 				"outputs": [
 					{
-						"internalType": "uint32",
+						"internalType": "uint16",
 						"name": "",
-						"type": "uint32"
+						"type": "uint16"
 					}
 				],
 				"stateMutability": "view",
@@ -199,14 +199,14 @@
 						"type": "uint256"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint16",
 						"name": "voteCount",
-						"type": "uint256"
+						"type": "uint16"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint8",
 						"name": "memberID",
-						"type": "uint256"
+						"type": "uint8"
 					},
 					{
 						"internalType": "uint256",
@@ -214,14 +214,14 @@
 						"type": "uint256"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint16",
 						"name": "activeProposal",
-						"type": "uint256"
+						"type": "uint16"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint16",
 						"name": "submittedDraft",
-						"type": "uint256"
+						"type": "uint16"
 					}
 				],
 				"stateMutability": "view",
@@ -396,18 +396,13 @@
 					},
 					{
 						"internalType": "uint256",
-						"name": "proposedAt",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
 						"name": "executedAt",
 						"type": "uint256"
 					},
 					{
-						"internalType": "uint256",
-						"name": "withdrawnAt",
-						"type": "uint256"
+						"internalType": "bool",
+						"name": "withdrawn",
+						"type": "bool"
 					},
 					{
 						"internalType": "uint8",
@@ -486,40 +481,16 @@
 				],
 				"stateMutability": "view",
 				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "treasuryReserve",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
 			}
 		],
 		"devdoc": {
 			"kind": "dev",
-			"methods": {
-				"treasuryReserve()": {
-					"details": "The contract balance is publicly visible on-chain",
-					"returns": {
-						"_0": "balance Current contract balance"
-					}
-				}
-			},
+			"methods": {},
 			"version": 1
 		},
 		"userdoc": {
 			"kind": "user",
-			"methods": {
-				"treasuryReserve()": {
-					"notice": "Returns contract balance"
-				}
-			},
+			"methods": {},
 			"version": 1
 		}
 	},
@@ -540,11 +511,11 @@
 	},
 	"sources": {
 		"SmartConstitution.sol": {
-			"keccak256": "0x89affe4bed7573f544d074e1a6c68312ed1ec22ef569cde78ed19ed45929d3bd",
+			"keccak256": "0x9f62057dcc1609db96d50e0839f6354f3458bf05392c349fcd078aed64348224",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://85e7d93308b2d9fe200111d25f4a4731e9401eee78b9dea72f8c3fb21db97195",
-				"dweb:/ipfs/QmfRjKU8qxJJgh4hpQfrGk7daephP4WgqWaJhW4BSvankh"
+				"bzz-raw://c1192a3a68e38bfeed15b59401282d6170e945f5ef614f80e0f0f61d2608db8b",
+				"dweb:/ipfs/QmW3Pi5mtWJaLypBLidf8TQQfgJQeGx7bNbiimSYmTEjuQ"
 			]
 		}
 	},

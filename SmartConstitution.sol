@@ -14,11 +14,11 @@ struct Candidate {
     string bio;
     string website;
     uint256 registeredAt;
-    uint256 voteCount;
-    uint256 memberID; // 0 if not elected, Member Index if one of the 50 members
+    uint16 voteCount;
+    uint8 memberID; // 0 if not elected, Member Index if one of the 50 members
     uint256 leaderAt; // 0 if never led, otherwise the week number they led
-    uint256 activeProposal; // 0 if no active proposal, otherwise proposalId
-    uint256 submittedDraft; // 0 if not submitted a draft, otherwise draftlId
+    uint16 activeProposal; // 0 if no active proposal, otherwise proposalId
+    uint16 submittedDraft; // 0 if not submitted a draft, otherwise draftlId
 }
 struct Payment {
     uint256 amount;
@@ -28,9 +28,8 @@ struct Payment {
 struct Proposal {
     address proposer;
     string provisions;
-    uint256 proposedAt;
     uint256 executedAt;
-    uint256 withdrawnAt;
+    bool withdrawn;
     uint8 yesVotes;
     Payment[] payments;
 }
@@ -40,10 +39,10 @@ contract SharedStorage {
     uint256 public constant CAMPAIGN_DURATION = 2 weeks;
     uint8 public constant N_MEMBERS = 50;
     uint256 public immutable startTime;
-    uint256 public electionEnd;
     uint256 public RegistrationEnd;
+    uint256 public electionEnd;
     address public neutral; // Address of the trusted neutral entity to find random voters
-    uint32 public addedVoterCount;
+    uint16 public addedVoterCount;
     address[] public candidateList;
     mapping(address => Candidate) public candidateInfo;
 
@@ -75,7 +74,7 @@ contract SharedStorage {
 contract Formation is SharedStorage {
     uint256 public constant LEAD_PERIOD = 2 weeks;
     uint256 public constant REG_FEE = 1 ether / 1000;
-    uint32 private constant VOTER_BATCH = 10;
+    uint16 private constant VOTER_BATCH = 10;
 
     mapping(bytes32 => bool) private isVoterHash; // Random voter hash
     mapping(address => uint256) private voteTime; // 0:not registered, 1:registered, >1:voted at timestamp
@@ -103,7 +102,7 @@ contract Formation is SharedStorage {
         require(msg.sender == neutral, "Not authorized neutral");
         require(
             getCurrentPhase() == Phase.Registration,
-            "Voter adding period has ended."
+            "Voter adding period ended."
         );
         require(
             addedVoterCount < RANDOM_VOTERS,
@@ -141,7 +140,7 @@ contract Formation is SharedStorage {
 
         // Enable voting for all addresses
         for (uint8 i = 0; i < VOTER_BATCH; i++) {
-            require(voterAddresses[i] != address(0), "Invalid voter address");
+            require(voterAddresses[i] != address(0), "Invalid address");
             require(
                 voteTime[voterAddresses[i]] == 0,
                 "Addresss already registered. Registrar ERROR!"
@@ -169,9 +168,9 @@ contract Formation is SharedStorage {
         return isVoterHash[_hashDemo];
     }
 
-    function getVoteTime(address voterAddress) external view returns (uint256) {
-        return voteTime[voterAddress];
-    }
+    // function getVoteTime(address voterAddress) external view returns (uint256) {
+    //     return voteTime[voterAddress];
+    // }
 
     /**
      * @notice Register as a candidate with required information
@@ -272,7 +271,7 @@ contract Formation is SharedStorage {
         require(block.timestamp > electionEnd, "Call after election");
         //unchecked {
 
-        for (uint256 i = 1; i <= N_MEMBERS; i++) {
+        for (uint8 i = 1; i <= N_MEMBERS; i++) {
             for (uint256 j = candidateList.length - 1; i <= j; j--) {
                 if (
                     candidateInfo[candidateList[j]].voteCount >
@@ -319,7 +318,7 @@ contract Formation is SharedStorage {
 
 contract Governance is SharedStorage {
     uint8 public constant SUPER_MAJORITY = 30;
-    mapping(address => mapping(uint256 => uint256)) public memberVotedAt;
+    mapping(address => mapping(uint256 => bool)) public memberVoted;
 
     function proposeProposal(
         string calldata _provisions,
@@ -335,7 +334,7 @@ contract Governance is SharedStorage {
             "Has an active proposal"
         );
 
-        uint256 proposalId = proposals.length;
+        uint8 proposalId = uint8(proposals.length);
         candidateInfo[msg.sender].activeProposal = proposalId;
 
         proposals.push(); // Push empty proposal first
@@ -343,7 +342,6 @@ contract Governance is SharedStorage {
 
         newProposal.proposer = msg.sender;
         newProposal.provisions = _provisions;
-        newProposal.proposedAt = block.timestamp;
         // Copy payments array
         for (uint256 i = 0; i < _payments.length; i++) {
             newProposal.payments.push(_payments[i]);
@@ -366,12 +364,10 @@ contract Governance is SharedStorage {
         require(proposalId < proposals.length, "Invalid proposal ID");
 
         Proposal storage proposal = proposals[proposalId];
-        require(proposal.withdrawnAt == 0, "Proposal withdrawn");
-        //require(proposal.memberVotedAt[msg.sender]==0, "Already voted");
-        //proposal.memberVotedAt[msg.sender] = block.timestamp;
+        require(!proposal.withdrawn, "Proposal withdrawn");
 
-        require(memberVotedAt[msg.sender][proposalId] == 0, "Already voted");
-        memberVotedAt[msg.sender][proposalId] = block.timestamp;
+        require(!memberVoted[msg.sender][proposalId], "Already voted");
+        memberVoted[msg.sender][proposalId] = true;
 
         proposal.yesVotes++;
 
@@ -396,10 +392,10 @@ contract Governance is SharedStorage {
             proposal.proposer == msg.sender,
             "Only the proposer can withdraw"
         );
-        require(proposal.executedAt == 0, "Proposal already executed");
-        require(proposal.withdrawnAt == 0, "Proposal already withdrawn");
+        require(proposal.executedAt == 0, "Already executed");
+        require(!proposal.withdrawn, "Already withdrawn");
 
-        proposal.withdrawnAt = block.timestamp;
+        proposal.withdrawn = true;
         candidateInfo[msg.sender].activeProposal = 0;
         emit ProposalWithdrawn(proposalId);
     }
@@ -413,12 +409,12 @@ contract Governance is SharedStorage {
         }
     }
 
-    function getProposalInfo(
-        uint256 proposalId
-    ) external view returns (Proposal memory) {
-        require(proposalId < proposals.length, "Invalid proposal ID");
-        return proposals[proposalId];
-    }
+    // function getProposalInfo(
+    //     uint256 proposalId
+    // ) external view returns (Proposal memory) {
+    //     require(proposalId < proposals.length, "Invalid proposal ID");
+    //     return proposals[proposalId];
+    // }
 }
 
 contract Finance is SharedStorage {
@@ -445,14 +441,9 @@ contract Finance is SharedStorage {
     mapping(address => uint8) public memberRank;
     uint8 public noRates = N_MEMBERS;
 
-    /**
-     * @notice Returns contract balance
-     * @dev The contract balance is publicly visible on-chain
-     * @return balance Current contract balance
-     */
-    function treasuryReserve() public view returns (uint256) {
-        return address(this).balance;
-    }
+    // function treasuryReserve() public view returns (uint256) {
+    //     return address(this).balance;
+    // }
 
     function proposeRate(uint256 newRate) external returns (uint8 newRank) {
         require(
@@ -613,7 +604,7 @@ contract Referendum is SharedStorage {
         _draft.submittedAt = block.timestamp;
         _draft.voteCount = 0;
 
-        candidateInfo[msg.sender].submittedDraft = constitutionDrafts.length;
+        candidateInfo[msg.sender].submittedDraft = uint16(constitutionDrafts.length);
         emit ConstitutionDraftSubmitted(constitutionDrafts.length, _draft);
         constitutionDrafts.push(_draft);
     }
@@ -622,15 +613,15 @@ contract Referendum is SharedStorage {
         ConstitutionDraft draft
     );
 
-    function getConstitution(
-        uint256 draftId
-    ) external view returns (ConstitutionDraft memory) {
-        require(
-            draftId < constitutionDrafts.length,
-            "Invalid constitution draft ID"
-        );
-        return constitutionDrafts[draftId];
-    }
+    // function getConstitution(
+    //     uint256 draftId
+    // ) external view returns (ConstitutionDraft memory) {
+    //     require(
+    //         draftId < constitutionDrafts.length,
+    //         "Invalid constitution draft ID"
+    //     );
+    //     return constitutionDrafts[draftId];
+    // } 
 
     function approveRegistrar(address registrar, int8 vote) external {
         require(candidateInfo[msg.sender].memberID > 0, "Not a member");
@@ -704,7 +695,7 @@ contract Referendum is SharedStorage {
             } else if (voterRegistrars[voterHashes[i]][1] == address(0)) {
                 require(
                     voterRegistrars[voterHashes[i]][0] != msg.sender,
-                    "Registrar must be different"
+                    "Same Registrar"
                 );
                 voterRegistrars[voterHashes[i]][1] = msg.sender;
             } else {
@@ -732,24 +723,24 @@ contract Referendum is SharedStorage {
         uint256 referendumVoterCount
     );
 
-    function getRegistrarsOfHash(
-        bytes32 voterHash
-    ) external view returns (address[REQUIRED_REG] memory) {
-        return voterRegistrars[voterHash];
-    }
+    // function getRegistrarsOfHash(
+    //     bytes32 voterHash
+    // ) external view returns (address[REQUIRED_REG] memory) {
+    //     return voterRegistrars[voterHash];
+    // }
 
-    function getVoterStatus(
-        address voterAddress
-    ) external view returns (uint256) {
-        return referendumVotingTime[voterAddress];
-    }
+    // function getVoterStatus(
+    //     address voterAddress
+    // ) external view returns (uint256) {
+    //     return referendumVotingTime[voterAddress];
+    // }
 
     function startReferendum() external {
         require(
             electionEnd + GOV_LENGTH < block.timestamp,
             "Cannot start referendum yet"
         );
-        require(ratifiedConstitutionId == 0, "Already ratified a constitution");
+        require(ratifiedConstitutionId == 0, "Already ratified");
         require(constitutionDrafts.length > MIN_DRAFTS, "Not enough drafts");
         require(referendumVoterCount >= MIN_VOTERS, "Not enough voters");
         referendumEnd = block.timestamp + 1 days;
@@ -760,14 +751,14 @@ contract Referendum is SharedStorage {
     event ReferendumStarted();
 
     function voteInReferendum(uint256[] calldata _drafts) external {
-        require(block.timestamp < referendumEnd, "Not in Referendum time");
+        require(block.timestamp < referendumEnd, "Not Referendum time");
         require(
             _drafts.length <= constitutionDrafts.length,
             "Invalid draft list"
         );
         require(
             referendumVotingTime[msg.sender] == 2,
-            "Voted or Not registered enough times"
+            "Voted or Not registered"
         );
 
         bool[] memory votedForDrafts = new bool[](constitutionDrafts.length);
@@ -797,7 +788,7 @@ contract Referendum is SharedStorage {
 
         require(
             referendumEnd > 0 && referendumEnd < block.timestamp,
-            "Call once after Referendum"
+            "Call after Referendum"
         );
 
         uint256 _winningDraftId;
@@ -826,7 +817,7 @@ contract Referendum is SharedStorage {
     );
 }
 
-contract Elections is SharedStorage {}
+// contract Elections is SharedStorage {}
 
 contract SmartConstitution is Formation, Governance, Referendum, Finance {
     constructor(address neutralEntity, string memory interimConstitution) {
@@ -840,9 +831,8 @@ contract SmartConstitution is Formation, Governance, Referendum, Finance {
 
         _proposal.proposer = msg.sender;
         _proposal.provisions = interimConstitution;
-        _proposal.proposedAt = startTime;
         _proposal.executedAt = startTime;
-        _proposal.withdrawnAt = 0;
+        _proposal.withdrawn = false;
         _proposal.yesVotes = N_MEMBERS;
     }
 }

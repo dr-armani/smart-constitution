@@ -62,9 +62,9 @@
 				"name": "addedVoterCount",
 				"outputs": [
 					{
-						"internalType": "uint32",
+						"internalType": "uint16",
 						"name": "",
-						"type": "uint32"
+						"type": "uint16"
 					}
 				],
 				"stateMutability": "view",
@@ -101,14 +101,14 @@
 						"type": "uint256"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint16",
 						"name": "voteCount",
-						"type": "uint256"
+						"type": "uint16"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint8",
 						"name": "memberID",
-						"type": "uint256"
+						"type": "uint8"
 					},
 					{
 						"internalType": "uint256",
@@ -116,14 +116,14 @@
 						"type": "uint256"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint16",
 						"name": "activeProposal",
-						"type": "uint256"
+						"type": "uint16"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint16",
 						"name": "submittedDraft",
-						"type": "uint256"
+						"type": "uint16"
 					}
 				],
 				"stateMutability": "view",
@@ -286,11 +286,11 @@
 	},
 	"sources": {
 		"SmartConstitution.sol": {
-			"keccak256": "0x89affe4bed7573f544d074e1a6c68312ed1ec22ef569cde78ed19ed45929d3bd",
+			"keccak256": "0xd8a394ff7c2c4050d0a154c73dd0e88ffc6e92be9e016c4b96a551c62f94a3e6",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://85e7d93308b2d9fe200111d25f4a4731e9401eee78b9dea72f8c3fb21db97195",
-				"dweb:/ipfs/QmfRjKU8qxJJgh4hpQfrGk7daephP4WgqWaJhW4BSvankh"
+				"bzz-raw://7dee2b5aef462b029cf854f25ee7d4a20edf9745346864ef159fb41788775d4a",
+				"dweb:/ipfs/QmZ4viZyZSMn3u7ftxhLvh6qPb4n5gWdWPrrz4EmYkydmA"
 			]
 		}
 	},
