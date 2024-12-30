@@ -35,19 +35,15 @@ struct Proposal {
 }
 
 contract SharedStorage {
-    uint32 public constant RANDOM_VOTERS = 1200;
+    uint16 public constant RANDOM_VOTERS = 1200;
     uint256 public constant CAMPAIGN_DURATION = 2 weeks;
     uint8 public constant N_MEMBERS = 50;
-    uint256 public immutable startTime;
     uint256 public RegistrationEnd;
     uint256 public electionEnd;
-    address public neutral; // Address of the trusted neutral entity to find random voters
+    uint256 public referendumEnd;
     uint16 public addedVoterCount;
     address[] public candidateList;
     mapping(address => Candidate) public candidateInfo;
-
-    Proposal[] public proposals; // proposals[0] is this transitional constitution
-    uint256 public referendumEnd;
 
     function getCurrentPhase() public returns (Phase) {
         if (block.timestamp < RegistrationEnd) return Phase.Registration;
@@ -72,12 +68,16 @@ contract SharedStorage {
 }
 
 contract Formation is SharedStorage {
+    uint8 public constant NEUTRAL_AGENTS = 3;
     uint256 public constant LEAD_PERIOD = 2 weeks;
     uint256 public constant REG_FEE = 1 ether / 1000;
-    uint16 private constant VOTER_BATCH = 10;
+    uint16 public constant VOTER_BATCH = 10;
 
-    mapping(bytes32 => bool) private isVoterHash; // Random voter hash
-    mapping(address => uint256) private voteTime; // 0:not registered, 1:registered, >1:voted at timestamp
+    address[NEUTRAL_AGENTS] public agents;
+    mapping(address => bool) public isAgent;
+
+    mapping(bytes32 => mapping(address => bool)) private agentVoterHash; // Each Agent Verifies Each Voter Hash
+    mapping(address => uint256) public voteTime; // 0:not registered, 1:registered, >1:voted at timestamp
 
     bool public membersElected = false;
 
@@ -90,7 +90,7 @@ contract Formation is SharedStorage {
     }
 
     /**
-     * @notice Neutral: Verify ID and birthdate (1957 <= yearOfBirth <= 2006).
+     * @notice Neutral Agent: Verify ID and birthdate (1957 <= yearOfBirth <= 2006).
      * @param voterAddresses: Wallet addresses of the randomly selected voters
      * @param voterDemos: yearOfBirth(yyyy),monthOfBirth(mm),gender(male=0,female=1)
      */
@@ -99,15 +99,12 @@ contract Formation is SharedStorage {
         address[VOTER_BATCH] calldata voterAddresses, // 10 voters' addresses in a random order
         Demographic[VOTER_BATCH] calldata voterDemos // 10 voters' demographics in a random order
     ) external {
-        require(msg.sender == neutral, "Not authorized neutral");
+        require(isAgent[msg.sender], "Not an agent");
         require(
             getCurrentPhase() == Phase.Registration,
-            "Voter adding period ended."
+            "Registration period ended."
         );
-        require(
-            addedVoterCount < RANDOM_VOTERS,
-            "Maximum number of voters reached."
-        );
+        require(addedVoterCount < RANDOM_VOTERS, "Maximum number of voters.");
         require(
             voterDemos.length == VOTER_BATCH &&
                 voterAddresses.length == VOTER_BATCH,
@@ -134,18 +131,21 @@ contract Formation is SharedStorage {
                     voterDemos[i].gender
                 )
             );
-            require(!isVoterHash[_hashDemo], "Voter hash already registered");
-            isVoterHash[_hashDemo] = true;
+            require(
+                !agentVoterHash[_hashDemo][msg.sender],
+                "Already Verified this Voter"
+            );
+            agentVoterHash[_hashDemo][msg.sender] = true;
         }
 
         // Enable voting for all addresses
         for (uint8 i = 0; i < VOTER_BATCH; i++) {
             require(voterAddresses[i] != address(0), "Invalid address");
             require(
-                voteTime[voterAddresses[i]] == 0,
-                "Addresss already registered. Registrar ERROR!"
+                voteTime[voterAddresses[i]] < NEUTRAL_AGENTS,
+                "Already registered thrice. Registrar ERROR!"
             );
-            voteTime[voterAddresses[i]] = 1;
+            voteTime[voterAddresses[i]]++;
         }
 
         addedVoterCount += VOTER_BATCH;
@@ -158,6 +158,7 @@ contract Formation is SharedStorage {
     );
 
     function getVoterStatus(
+        address agentAddress,
         uint16 birthYear,
         uint8 birthMonth,
         bool gender
@@ -165,7 +166,7 @@ contract Formation is SharedStorage {
         bytes32 _hashDemo = keccak256(
             abi.encodePacked(birthYear, birthMonth, gender)
         );
-        return isVoterHash[_hashDemo];
+        return agentVoterHash[_hashDemo][agentAddress];
     }
 
     // function getVoteTime(address voterAddress) external view returns (uint256) {
@@ -318,6 +319,7 @@ contract Formation is SharedStorage {
 
 contract Governance is SharedStorage {
     uint8 public constant SUPER_MAJORITY = 30;
+    Proposal[] public proposals;
     mapping(address => mapping(uint256 => bool)) public memberVoted;
 
     function proposeProposal(
@@ -545,7 +547,7 @@ contract Referendum is SharedStorage {
     uint256 public constant SUBMISSION_FEE = 0;
     uint8 public constant MIN_DRAFTS = 10;
     uint32 public constant MIN_VOTERS = 1_000_000;
-    uint32 private constant VOTER_BATCH = 10; // voter batch size for the referendum
+    uint32 public constant VOTER_BATCH = 10; // voter batch size for the referendum
     uint256 public constant MAX_APPROVALS = 1000; // maximum registrar approval per member
     int256 public constant REQUIRED_SCORE = 10; // required approvals for each registrar
     uint256 public constant REQUIRED_REG = 2; // required number of registrations per voter
@@ -562,51 +564,85 @@ contract Referendum is SharedStorage {
     }
     ConstitutionDraft[] public constitutionDrafts;
 
-    mapping(bytes32 => address[REQUIRED_REG]) private voterRegistrars; // The registrars for each voter hash
-    mapping(address => uint256) private referendumVotingTime;
+    mapping(bytes32 => address[REQUIRED_REG]) public voterRegistrars; // The registrars for each voter hash
+    mapping(address => uint256) public referendumVotingTime;
     // 0:not registered, 1:registered once, 2: registered twice, time:voted at timestamp
 
     uint32 public referendumVoterCount;
     uint256 public ratifiedConstitutionId;
 
     mapping(address => mapping(address => int8)) private memberRegistrar; // member => registrar => vote (-1, 0, 1)
-    mapping(address => int256) private registrarScore; // registrar => (approvals - disapprovals)
+    mapping(address => int256) public registrarScore; // registrar => (approvals - disapprovals)
     mapping(address => uint256) private memberApprovalCount; // count of nonzero votes per member
 
-    function submitDraft(ConstitutionDraft memory _draft) external payable {
+    /**  
+    @notice This function enables each Member to submit one constitution draft.
+    @param draft The input should have the following fields:
+
+    struct ConstitutionDraft {
+        string description; // Brief description or title (required)
+        string constitutionText; // Full text of the constitution (required)
+        string implementationCode; // Computer implementation (optional)
+        string[] submitterIdentities; // Names/pseudonyms/organizations/groups
+        bytes32 hashedOffChain; // Hash of above four fields (Instructions below)
+        string supportingMaterials; // IPFS hash for supporting files (PDF, video, etc.)
+        uint256 submittedAt; // Time of submission (leave 0)
+        uint256 voteCount; // Number of people voted for this draft (leave 0)
+    }
+
+    @dev Calculate the hash offchain in frontend.
+
+    JavaScript Code: 
+
+    const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
+
+    const description = "The Modern Democratic Constitution of Liberal Republic";
+    const constitutionText = "
+    Article 1. The full text of the constitution draft is in this field. \n 
+    Article 2. The longer texts consume more gas.";
+    const implementationCode = ""; 
+
+    const hashedOffChain = keccak256(defaultAbiCoder.encode(
+        ["string", "string", "string"],
+        [description, constitutionText, implementationCode]
+    ));
+
+    console.log("Hash:", hashedOffChain);
+    */
+
+    function submitDraft(ConstitutionDraft memory draft) external payable {
         require(candidateInfo[msg.sender].memberID > 0, "Not a member");
         require(
             candidateInfo[msg.sender].submittedDraft == 0,
             "Already submitted"
         );
         require(getCurrentPhase() == Phase.Governance, "Wrong phase");
-        require(bytes(_draft.description).length > 0, "Description required");
+        require(bytes(draft.description).length > 0, "Description required");
         require(
-            bytes(_draft.constitutionText).length > 0,
+            bytes(draft.constitutionText).length > 0,
             "constitutionText required"
         );
-        require(
-            _draft.submitterIdentities.length > 0,
-            "At least one submitter"
-        );
+        require(draft.submitterIdentities.length > 0, "At least one submitter");
         require(msg.value >= SUBMISSION_FEE, "Insufficient submission fee");
 
         bytes32 hashedOnChain = keccak256(
             abi.encodePacked(
-                _draft.description,
-                _draft.implementationCode,
-                _draft.constitutionText
+                draft.description,
+                draft.implementationCode,
+                draft.constitutionText
             )
         );
 
-        require(hashedOnChain == _draft.hashedOffChain, "Incorrect Hash!");
+        require(hashedOnChain == draft.hashedOffChain, "Incorrect Hash!");
 
-        _draft.submittedAt = block.timestamp;
-        _draft.voteCount = 0;
+        draft.submittedAt = block.timestamp;
+        draft.voteCount = 0;
 
-        candidateInfo[msg.sender].submittedDraft = uint16(constitutionDrafts.length);
-        emit ConstitutionDraftSubmitted(constitutionDrafts.length, _draft);
-        constitutionDrafts.push(_draft);
+        candidateInfo[msg.sender].submittedDraft = uint16(
+            constitutionDrafts.length
+        );
+        emit ConstitutionDraftSubmitted(constitutionDrafts.length, draft);
+        constitutionDrafts.push(draft);
     }
     event ConstitutionDraftSubmitted(
         uint256 indexed draftId,
@@ -621,7 +657,7 @@ contract Referendum is SharedStorage {
     //         "Invalid constitution draft ID"
     //     );
     //     return constitutionDrafts[draftId];
-    // } 
+    // }
 
     function approveRegistrar(address registrar, int8 vote) external {
         require(candidateInfo[msg.sender].memberID > 0, "Not a member");
@@ -643,13 +679,13 @@ contract Referendum is SharedStorage {
     }
 
     /**  
-    * @notice Two different registrars required to double register each voter.  
-    * @notice Registrar: Verify ID and Age (yearOfBirth <= 2006). 
-    * @param voterAddresses[i]: Wallet addresses of the verified voters 
-    * @param voterHashes[i]: Hash of FirstName+LastName+DoB(YYYY/MM/DD)+SSN+gender(male=0,female=1) 
-    * @notice Registrar: Calculate hash offchain in frontend: 
+    @notice Two different registrars required to double register each voter.  
+    @notice Registrar: Verify ID and Age (yearOfBirth <= 2006). 
+    @param voterAddresses[i]: Wallet addresses of the verified voters 
+    @param voterHashes[i]: Hash of FirstName+LastName+DoB(YYYY/MM/DD)+SSN+gender(male=0,female=1) 
+    @dev Calculate each hash offchain in frontend: 
 
-    Example JavaScript Code: 
+    JavaScript Code: 
 
     const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
 
@@ -820,17 +856,21 @@ contract Referendum is SharedStorage {
 // contract Elections is SharedStorage {}
 
 contract SmartConstitution is Formation, Governance, Referendum, Finance {
-    constructor(address neutralEntity, string memory interimConstitution) {
-        neutral = neutralEntity;
+    uint256 public immutable startTime;
+    constructor(
+        address[NEUTRAL_AGENTS] memory _neutralAgents,
+        string memory _interimConstitution
+    ) {
+        agents = _neutralAgents;
 
         startTime = block.timestamp;
         RegistrationEnd = startTime + 4 weeks;
         electionEnd = RegistrationEnd + CAMPAIGN_DURATION + 1 days;
 
+        // proposals[0] is this Interim Constitution
         Proposal storage _proposal = proposals.push();
-
         _proposal.proposer = msg.sender;
-        _proposal.provisions = interimConstitution;
+        _proposal.provisions = _interimConstitution;
         _proposal.executedAt = startTime;
         _proposal.withdrawn = false;
         _proposal.yesVotes = N_MEMBERS;

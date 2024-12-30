@@ -3,9 +3,9 @@
 ### 1. The Transitional Government (hereafter "TG") is formed as follows:
 
 > 1.1. TG shall consist of 50 Members (hereinafter “Members”).  
-> 1.2. Initially, the controlling parties shall appoint a trusted neutral entity to select a representative random sample of the population to vote.  
-> 1.3. Within 4 weeks of this appointment, the neutral entity shall randomly select 1,200 citizens to vote anonymously and elect Members.  
-> 1.4. The legal birth dates of the 1,200 randomly selected voters should fall between January 1957, and December 2006 (inclusive), spanning 50 years or 600 months in total. There should be exactly two voters born in each of these 600 months: one biologically male (at birth) and one biologically female (at birth). This ensures a uniform distribution of age and gender, with exactly 50% (600 voters) biologically male and 50% (600 voters) biologically female. This maximizes diversity while limiting the choices for the neutral entity.  
+> 1.2. Initially, the controlling parties shall appoint three trusted neutral agents to select a representative random sample of the population to vote.  
+> 1.3. Within 4 weeks of this appointment, the neutral agents shall randomly select 1,200 citizens to vote anonymously and elect Members.  
+> 1.4. The legal birth dates of the 1,200 randomly selected voters should fall between January 1957, and December 2006 (inclusive), spanning 50 years or 600 months in total. There should be exactly two voters born in each of these 600 months: one biologically male (at birth) and one biologically female (at birth). This ensures a uniform distribution of age and gender, with exactly 50% (600 voters) biologically male and 50% (600 voters) biologically female. This maximizes diversity while limiting the choices for the neutral agents.  
 > 1.5. During this 4-week period, any person may register as a candidate for Membership.  
 > 1.6. If, by day 28, at least 100 candidates and 1,200 voters are registered, the campaign period shall commence and last for 14 days.  
 > 1.7. If these minimum thresholds for candidates or voters are not met, the registration period shall be extended until both thresholds are met. Once met, the campaign period shall commence and last for 14 days.  
@@ -32,17 +32,18 @@
 
 > 3.1. Maintain stability, law, and order throughout the transition period;  
 > 3.2. Exercise control over the armed forces, law enforcement, and judiciary during the transition period;  
-> 3.3. Prepare multiple constitution drafts within 10 weeks of formation, allowing any Member to submit a constitution draft;  
+> 3.3. Prepare multiple constitution drafts within 10 weeks of formation, enabling each Member to submit one constitution draft;  
 > 3.4. Organize a national referendum to ratify a new constitution after the 10-week period;  
-> 3.5. Enable every citizen born in 2006 or eariler to vote for any of the submitted constitution drafts in the referendum;  
-> 3.6. Conduct the referendum using approval voting, allowing each citizen to vote for multiple constitution drafts;  
-> 3.7. Hold national elections to establish a new government in accordance with the ratified constitution within four weeks of the referendum; and  
-> 3.8. Dissolve itself and transfer all power to the newly elected government within two weeks after the national elections.
+> 3.5. Enable every citizen born in 2006 or eariler to vote for any of the submitted constitution drafts in the referendum;
+> 3.6. Recruit enough registrars to register every eligible citizen (who wants to vote) by two independent registrars;  
+> 3.7. Conduct the referendum using approval voting, allowing each citizen to vote for multiple constitution drafts;  
+> 3.8. Hold national elections to establish a new government in accordance with the ratified constitution within four weeks of the referendum; and  
+> 3.9. Dissolve itself and transfer all power to the newly elected government within two weeks after the national elections.
 
 ### 4. If TG fails to fulfill its duties within 18 weeks:
 
-> 4.1. A new Neutral entity shall be appointed to restart the process.  
-> 4.2. The new Neutral entity shall randomly select 1,200 new citizens to vote for candidates.  
+> 4.1. Three new Neutral agents shall be appointed to restart the process.  
+> 4.2. The new Neutral agents shall randomly select 1,200 new citizens to vote for candidates.  
 > 4.3. The 1,200 new randomly selected citizens elect 50 new Members in an open, inclusive and free election.  
 > 4.4. The existing TG shall be dissolved and replaced by the newly formed TG composed of 50 new Members.
 
