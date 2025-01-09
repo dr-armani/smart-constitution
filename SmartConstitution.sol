@@ -68,12 +68,12 @@ contract SharedStorage {
 }
 
 contract Formation is SharedStorage {
-    uint8 public constant NEUTRAL_AGENTS = 3;
+    uint8 public constant NEUTRAL_REGISTRARS = 3;
     uint256 public constant LEAD_PERIOD = 2 weeks;
     uint256 public constant REG_FEE = 1 ether / 1000;
     uint16 private constant VOTER_BATCH = 10;
 
-    address[NEUTRAL_AGENTS] public agents;
+    address[NEUTRAL_REGISTRARS] public agents;
     mapping(address => bool) public isAgent;
 
     mapping(bytes32 => mapping(address => bool)) private agentVoterHash; // Each Agent Verifies Each Voter Hash
@@ -142,7 +142,7 @@ contract Formation is SharedStorage {
         for (uint8 i = 0; i < VOTER_BATCH; i++) {
             require(voterAddresses[i] != address(0), "Invalid address");
             require(
-                voteTime[voterAddresses[i]] < NEUTRAL_AGENTS,
+                voteTime[voterAddresses[i]] < NEUTRAL_REGISTRARS,
                 "Already registered thrice. Registrar ERROR!"
             );
             voteTime[voterAddresses[i]]++;
@@ -242,13 +242,14 @@ contract Formation is SharedStorage {
             "Invalid vote count"
         );
         require(
-            voteTime[msg.sender] == 1,
-            "Already voted (>1) or not registered (0)"
+            NEUTRAL_REGISTRARS < 2*voteTime[msg.sender]  &&   // At least 2 neutral registrars should validate the voter address
+                voteTime[msg.sender] <= NEUTRAL_REGISTRARS ,  // Not voted yet.
+            "Already voted (>1) or not registered (<2)"
         );
 
         bool[] memory votedFor = new bool[](candidateList.length);
 
-        voteTime[msg.sender] = block.timestamp;
+        voteTime[msg.sender] = block.timestamp; // --> NEUTRAL_REGISTRARS < voteTime[msg.sender]
         emit VoteCast(msg.sender);
 
         for (uint256 i = 0; i < _candidatesIds.length; i++) {
@@ -565,7 +566,7 @@ contract Referendum is SharedStorage {
     ConstitutionDraft[] public constitutionDrafts;
 
     mapping(bytes32 => address[REQUIRED_REG]) public voterRegistrars; // The registrars for each voter hash
-    mapping(address => uint256) public referendumVotingTime;
+    mapping(address => uint256) public referendumVoteTime;
     // 0:not registered, 1:registered once, 2: registered twice, time:voted at timestamp
 
     uint32 public referendumVoterCount;
@@ -743,10 +744,10 @@ contract Referendum is SharedStorage {
         for (uint8 i = 0; i < VOTER_BATCH; i++) {
             require(voterAddresses[i] != address(0), "Invalid voter address");
             require(
-                referendumVotingTime[voterAddresses[i]] < REQUIRED_REG,
+                referendumVoteTime[voterAddresses[i]] < REQUIRED_REG,
                 "Address already registered! REGISTRAR ERROR!"
             );
-            referendumVotingTime[voterAddresses[i]]++;
+            referendumVoteTime[voterAddresses[i]]++;
         }
 
         referendumVoterCount += VOTER_BATCH;
@@ -768,7 +769,7 @@ contract Referendum is SharedStorage {
     // function getVoterStatus(
     //     address voterAddress
     // ) external view returns (uint256) {
-    //     return referendumVotingTime[voterAddress];
+    //     return referendumVoteTime[voterAddress];
     // }
 
     function startReferendum() external {
@@ -793,7 +794,7 @@ contract Referendum is SharedStorage {
             "Invalid draft list"
         );
         require(
-            referendumVotingTime[msg.sender] == 2,
+            referendumVoteTime[msg.sender] == REQUIRED_REG,
             "Voted or Not registered"
         );
 
@@ -807,7 +808,7 @@ contract Referendum is SharedStorage {
             constitutionDrafts[_draftId].voteCount++;
         }
 
-        referendumVotingTime[msg.sender] = block.timestamp;
+        referendumVoteTime[msg.sender] = block.timestamp;
         emit ReferendumVoteCast(msg.sender);
     }
     event ReferendumVoteCast(address indexed voter);
@@ -859,7 +860,7 @@ contract Referendum is SharedStorage {
 contract SmartConstitution is Formation, Governance, Referendum, Finance {
     uint256 public immutable startTime;
     constructor(
-        address[NEUTRAL_AGENTS] memory _neutralAgents,
+        address[NEUTRAL_REGISTRARS] memory _neutralAgents,
         string memory _interimConstitution
     ) {
         agents = _neutralAgents;
