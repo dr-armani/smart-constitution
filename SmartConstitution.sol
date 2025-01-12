@@ -433,6 +433,7 @@ contract Finance is SharedStorage {
     struct Txn {
         int256 amount;
         uint256 txnTime;
+        uint256 rate;
     }
     mapping(address => Txn[]) public LenderTxns;
 
@@ -526,7 +527,8 @@ contract Finance is SharedStorage {
     function lend() external payable {
         Txn memory newTxn = Txn({
             amount: int256(msg.value),
-            txnTime: block.timestamp
+            txnTime: block.timestamp,
+            rate: currentRate
         });
 
         LenderTxns[msg.sender].push(newTxn);
