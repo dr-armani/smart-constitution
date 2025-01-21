@@ -45,7 +45,9 @@
 > 4.1. Three new Neutral registrars shall be appointed to restart the process.  
 > 4.2. The new Neutral registrars shall randomly select 1,200 new citizens to vote for candidates.  
 > 4.3. The 1,200 new randomly selected citizens elect 50 new Members in an open, inclusive and free election.  
-> 4.4. The existing TG shall be dissolved and replaced by the newly formed TG composed of 50 new Members.
+> 4.4. The existing TG shall be dissolved and replaced by the newly formed TG composed of 50 new Members.  
+> 4.5. If the constitutional referendum has not yet been held, the new TG shall proceed to hold the referendum as previously described.  
+> 4.6. If the constitutional referendum has already been held, the new TG shall execute the ratified constitution. A new referendum shall not be conducted.  
 
 ### 5. Members of TG shall NOT:
 
