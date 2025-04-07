@@ -33,10 +33,10 @@
 > 3.1. Maintain stability, law, and order throughout the transition period;  
 > 3.2. Exercise control over the armed forces, law enforcement, and judiciary during the transition period;  
 > 3.3. Prepare multiple constitution drafts within 10 weeks of formation, enabling each Member to submit one constitution draft;  
-> 3.4. Organize a national referendum to ratify a new constitution after the 10-week period;  
+> 3.4. Hold a national referendum to ratify a new constitution after the 10-week period;  
 > 3.5. Enable every citizen born in 2006 or eariler to vote for any of the submitted constitution drafts in the referendum;
 > 3.6. Recruit enough registrars to register every eligible citizen (who wants to vote) by two independent registrars;  
-> 3.7. Conduct the referendum using approval voting, allowing each citizen to vote for multiple constitution drafts;  
+> 3.7. Hold the referendum using approval voting, allowing each citizen to vote for multiple constitution drafts;  
 > 3.8. Hold national elections to establish a new government in accordance with the ratified constitution within four weeks of the referendum; and  
 > 3.9. Dissolve itself and transfer all power to the newly elected government within two weeks after the national elections.
 
@@ -47,7 +47,7 @@
 > 4.3. The 1,200 new randomly selected citizens elect 50 new Members in an open, inclusive and free election.  
 > 4.4. The existing TG shall be dissolved and replaced by the newly formed TG composed of 50 new Members.  
 > 4.5. If the constitutional referendum has not yet been held, the new TG shall proceed to hold the referendum following section 3.  
-> 4.6. If the constitutional referendum has already been held, the new TG shall conduct a new referendum following section 3. The results of this new referendum shall override any previous referendum results.  
+> 4.6. If a constitutional referendum has already been held, the new TG shall hold a new referendum following section 3. The results of this new referendum shall override any previous referendum results.  
 
 ### 5. Members of TG shall NOT:
 
