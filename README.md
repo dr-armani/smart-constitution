@@ -34,7 +34,7 @@
 > 3.2. Exercise control over the armed forces, law enforcement, and judiciary during the transition period;  
 > 3.3. Prepare multiple constitution drafts within 10 weeks of formation, enabling each Member to submit one constitution draft;  
 > 3.4. Hold a national referendum to ratify a new constitution after the 10-week period;  
-> 3.5. Enable every citizen born in 2006 or eariler to vote for any of the submitted constitution drafts in the referendum;
+> 3.5. Enable every citizen born in 2006 or earlier to vote for any of the submitted constitution drafts in the referendum;
 > 3.6. Recruit enough registrars to register every eligible citizen (who wants to vote) by two independent registrars;  
 > 3.7. Hold the referendum using approval voting, allowing each citizen to vote for multiple constitution drafts;  
 > 3.8. Hold national elections to establish a new government in accordance with the ratified constitution within four weeks of the referendum; and  
