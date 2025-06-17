@@ -7,7 +7,7 @@ pragma solidity ^0.8.0;
 enum Phase {
     Registration, // Days 1-14: Candidate and voter registration
     Campaigning, // Days 15-28: Campaigning and debates
-    Election, // 1 Day: Voting for the members of the transitional government
+    Election,   // 1 Day: Voting for the members of the transitional government
     Governance, // 10 weeks: Preparing constitution drafts
     Referendum, // 1 Day: Referendum day
     Ratification // New Constitution Ratified
@@ -321,10 +321,10 @@ contract Formation is SharedStorage {
     event LeadershipChanged(address indexed newLeader);
 }
 
-contract Governance is SharedStorage {
-    uint8 public constant SUPER_MAJORITY = 30;
-    Proposal[] public proposals;
-    mapping(address => mapping(uint256 => bool)) public memberVoted;
+contract Governance is SharedStorage { 
+    uint8 public constant SUPER_MAJORITY = 30; 
+    Proposal[] public proposals; 
+    mapping(address => mapping(uint256 => bool)) public memberVoted; 
 
     function proposeProposal(
         string calldata _provisions,
@@ -548,7 +548,7 @@ contract Finance is SharedStorage {
     }
 }
 
-contract Referendum is SharedStorage {
+contract Referendum is SharedStorage { 
     uint256 public constant GOV_LENGTH = 10 weeks;
     uint256 public constant SUBMISSION_FEE = 0;
     uint8 public constant MIN_DRAFTS = 10;
@@ -860,7 +860,6 @@ contract Referendum is SharedStorage {
 }
 
 // contract Elections is SharedStorage {}
-
 
 contract SmartConstitution is Formation, Governance, Referendum, Finance {
     uint256 public immutable startTime;
