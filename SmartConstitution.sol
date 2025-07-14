@@ -1,17 +1,24 @@
-// Designed and Developed by Dr. Daniel Armani
-
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.0;
+
+/*
+ * Smart Constitution
+ *
+ * Designed and developed by:
+ *   Dr. Daniel Armani (@dr-armani)
+ *   LinkedIn: https://www.linkedin.com/in/dr-armani
+ *   Website: https://blockcenter.org/ceo
+ */
 
 enum Phase {
     Registration, // Days 1-14: Candidate and voter registration
     Campaigning, // Days 15-28: Campaigning and debates
-    Election,   // 1 Day: Voting for the members of the transitional government
+    Election, // 1 Day: Voting for the members of the transitional government
     Governance, // 10 weeks: Preparing constitution drafts
     Referendum, // 1 Day: Referendum day
     Ratification // New Constitution Ratified
 }
+
 struct Candidate {
     string fullName;
     string bio;
@@ -23,11 +30,13 @@ struct Candidate {
     uint16 activeProposal; // 0 if no active proposal, otherwise proposalId
     uint16 submittedDraft; // 0 if not submitted a draft, otherwise draftlId
 }
+
 struct Payment {
     uint256 amount;
     address recipient;
     string reason;
 }
+
 struct Proposal {
     address proposer;
     string provisions;
@@ -155,6 +164,7 @@ contract Formation is SharedStorage {
 
         emit VoterAdded(voterAddresses, addedVoterCount);
     }
+
     event VoterAdded(
         address[VOTER_BATCH] indexed voter,
         uint256 addedVoterCount
@@ -223,6 +233,7 @@ contract Formation is SharedStorage {
         candidateList.push(msg.sender);
         emit CandidateRegistered(msg.sender, _fullName, _bio, _website);
     }
+
     event CandidateRegistered(
         address indexed candidate,
         string fullName,
@@ -245,8 +256,8 @@ contract Formation is SharedStorage {
             "Invalid vote count"
         );
         require(
-            NEUTRAL_REGISTRARS < 2*voteTime[msg.sender]  &&   // At least 2 neutral registrars should validate the voter address
-                voteTime[msg.sender] <= NEUTRAL_REGISTRARS ,  // Not voted yet.
+            NEUTRAL_REGISTRARS < 2 * voteTime[msg.sender] && // At least 2 neutral registrars should validate the voter address
+                voteTime[msg.sender] <= NEUTRAL_REGISTRARS, // Not voted yet.
             "Already voted (>1) or not registered (<2)"
         );
 
@@ -267,6 +278,7 @@ contract Formation is SharedStorage {
             // voter2Candidates[msg.sender].push(_candidateId);
         }
     }
+
     event VoteCast(address indexed voter);
 
     function getElectionResults() external returns (address[] memory) {
@@ -302,6 +314,7 @@ contract Formation is SharedStorage {
         emit ElectionResults(candidateList, LeaderAddress);
         return candidateList;
     }
+
     event ElectionResults(address[] indexed candidateList, address firstLeader);
 
     function changeLeader() external {
@@ -318,13 +331,14 @@ contract Formation is SharedStorage {
         candidateInfo[LeaderAddress].leaderAt = block.timestamp;
         emit LeadershipChanged(LeaderAddress);
     }
+
     event LeadershipChanged(address indexed newLeader);
 }
 
-contract Governance is SharedStorage { 
-    uint8 public constant SUPER_MAJORITY = 30; 
-    Proposal[] public proposals; 
-    mapping(address => mapping(uint256 => bool)) public memberVoted; 
+contract Governance is SharedStorage {
+    uint8 public constant SUPER_MAJORITY = 30;
+    Proposal[] public proposals;
+    mapping(address => mapping(uint256 => bool)) public memberVoted;
 
     function proposeProposal(
         string calldata _provisions,
@@ -356,6 +370,7 @@ contract Governance is SharedStorage {
         emit ProposalProposed(proposals.length, msg.sender, _provisions);
         return proposals.length;
     }
+
     event ProposalProposed(
         uint256 indexed proposalId,
         address indexed proposer,
@@ -388,6 +403,7 @@ contract Governance is SharedStorage {
 
         return proposal.yesVotes;
     }
+
     event ProposalVoted(uint256 indexed proposalId, address indexed voter);
     event ProposalPassed(uint256 indexed proposalId);
 
@@ -405,6 +421,7 @@ contract Governance is SharedStorage {
         candidateInfo[msg.sender].activeProposal = 0;
         emit ProposalWithdrawn(proposalId);
     }
+
     event ProposalWithdrawn(uint256 indexed proposalId);
 
     function _executeProposal(uint256 proposalId) private {
@@ -517,6 +534,7 @@ contract Finance is SharedStorage {
 
         return rank;
     }
+
     event MemberRateChanged(
         address indexed member,
         uint256 oldRate,
@@ -537,6 +555,7 @@ contract Finance is SharedStorage {
         LenderTxns[msg.sender].push(newTxn);
         emit LoanReceived(msg.sender, int256(msg.value));
     }
+
     event LoanReceived(address indexed lender, int256 amount);
 
     function getBalance() external view returns (int256 _sum) {
@@ -548,7 +567,7 @@ contract Finance is SharedStorage {
     }
 }
 
-contract Referendum is SharedStorage { 
+contract Referendum is SharedStorage {
     uint256 public constant GOV_LENGTH = 10 weeks;
     uint256 public constant SUBMISSION_FEE = 0;
     uint8 public constant MIN_DRAFTS = 10;
@@ -650,6 +669,7 @@ contract Referendum is SharedStorage {
         emit ConstitutionDraftSubmitted(constitutionDrafts.length, draft);
         constitutionDrafts.push(draft);
     }
+
     event ConstitutionDraftSubmitted(
         uint256 indexed draftId,
         ConstitutionDraft draft
@@ -759,6 +779,7 @@ contract Referendum is SharedStorage {
 
         emit VoterRegistered(voterAddresses, msg.sender, referendumVoterCount);
     }
+
     event VoterRegistered(
         address[VOTER_BATCH] indexed voter,
         address registrar,
@@ -816,6 +837,7 @@ contract Referendum is SharedStorage {
         referendumVoteTime[msg.sender] = block.timestamp;
         emit ReferendumVoteCast(msg.sender);
     }
+
     event ReferendumVoteCast(address indexed voter);
 
     function getReferendumResults()
@@ -853,6 +875,7 @@ contract Referendum is SharedStorage {
 
         return (_winningDraftId, _ratifiedConstitution);
     }
+
     event ConstitutionRatified(
         uint256 indexed winningProposalId,
         ConstitutionDraft ratifiedConstitution
@@ -861,8 +884,10 @@ contract Referendum is SharedStorage {
 
 // contract Elections is SharedStorage {}
 
+/// @author Dr. Daniel Armani
 contract SmartConstitution is Formation, Governance, Referendum, Finance {
     uint256 public immutable startTime;
+
     constructor(
         address[NEUTRAL_REGISTRARS] memory _neutralAgents,
         string memory _interimConstitution
