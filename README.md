@@ -3,18 +3,18 @@
 
 ## Table of Contents
 
-1. [The Transitional Government](#1-the-transitional-government-hereafter-tg-is-formed-as-follows)  
-2. [Decision‑Making](#2-the-decisions-of-tg-shall-comply-with-the-following)  
-3. [Mandate of TG](#3-tg-shall)  
-4. [Failure to Fulfill Duties](#4-if-tg-fails-to-fulfill-its-duties-within-18-weeks)  
-5. [Restrictions on Members](#5-members-of-tg-shall-not)  
-6. [International Oversight](#6-a-coalition-of-international-organizations-eg-the-united-nations-shall)  
+1. [The Transitional Government](#I-the-transitional-government-hereafter-tg-is-formed-as-follows)  
+2. [Decision‑Making](#II-the-decisions-of-tg-shall-comply-with-the-following)  
+3. [Mandate of TG](#III-tg-shall)  
+4. [Failure to Fulfill Duties](#IV-if-tg-fails-to-fulfill-its-duties-within-18-weeks)  
+5. [Restrictions on Members](#V-members-of-tg-shall-not)  
+6. [International Oversight](#VI-a-coalition-of-international-organizations-eg-the-united-nations-shall)  
 
 ---
 
-## 1. The Transitional Government (hereafter "TG") is formed as follows:
+## I. The Transitional Government (hereafter "TG") is formed as follows:
 
-<ol type="I"> 
+<ol type="1"> 
 <li>TG shall consist of 50 Members (hereinafter “Members”).</li>
 <li>Initially, three trusted neutral registrars are appointed to select a representative random sample of the population to vote.</li>
 <li>Within 4 weeks of this appointment, the neutral registrars shall randomly select 1,200 citizens to vote anonymously and elect Members.</li>
@@ -40,9 +40,9 @@
 
 ---
 
-## 2. The decisions of TG shall comply with the following:
+## II. The decisions of TG shall comply with the following:
 
-<ol type="I"> 
+<ol type="1"> 
 <li>All Members' votes and decisions shall be recorded publicly on a blockchain.</li>
 <li>All financial transactions involving TG shall be recorded publicly on a blockchain.</li>
 <li>TG shall not amend or override any part of this Interim Constitution.</li>
@@ -55,9 +55,9 @@
 
 ---
 
-## 3. TG shall:
+## III. TG shall:
 
-<ol type="I"> 
+<ol type="1"> 
 <li>Maintain stability, law, and order throughout the transition period;</li>
 <li>Exercise control over the armed forces, law enforcement, and judiciary during the transition period;</li>
 <li>Prepare multiple constitution drafts within 10 weeks of formation, enabling each Member to submit one constitution draft;</li>
@@ -71,9 +71,9 @@
 
 ---
 
-## 4. If TG fails to fulfill its duties within 18 weeks:
+## IV. If TG fails to fulfill its duties within 18 weeks:
 
-<ol type="I"> 
+<ol type="1"> 
 <li>Three new Neutral registrars shall be appointed to restart the process.</li>
 <li>The new Neutral registrars shall randomly select 1,200 new citizens to vote for candidates.</li>
 <li>The 1,200 new randomly selected citizens elect 50 new Members in an open, inclusive and free election.</li>
@@ -84,9 +84,9 @@
 
 ---
 
-## 5. Members of TG shall NOT:
+## V. Members of TG shall NOT:
 
-<ol type="I"> 
+<ol type="1"> 
 <li>Run for office or participate in any election for the new government;</li>
 <li>Hold any official or unofficial government position for three years; nor</li>
 <li>Run in any election or hold public office for three years.</li>
@@ -94,9 +94,9 @@
 
 ---
 
-## 6. A coalition of international organizations (e.g. the United Nations) shall:
+## VI. A coalition of international organizations (e.g. the United Nations) shall:
 
-<ol type="I"> 
+<ol type="1"> 
 <li>Ensure that 1,200 voters are selected randomly from the citizenry;</li>
 <li>Monitor Members' compliance with this Interim Constitution; and</li>
 <li>Oversee the elections and the referendum to ensure integrity.</li>
