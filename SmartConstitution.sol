@@ -367,7 +367,7 @@ contract Governance is SharedStorage {
             newProposal.payments.push(_payments[i]);
         }
 
-        emit ProposalProposed(proposals.length, msg.sender, _provisions);
+        emit ProposalProposed(proposalId, msg.sender, _provisions);
         return proposals.length;
     }
 
