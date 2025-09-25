@@ -301,13 +301,13 @@ contract Formation is SharedStorage {
                 }
             }
 
-            candidateInfo[candidateList[i - 1]].memberID = (i - 1);
+            candidateInfo[candidateList[i - 1]].memberID = i;
         }
 
         membersElected = true;
 
         LeaderAddress = candidateList[0]; // = candidateList[candidateList.length - 1] ; Highest voted candidate
-        LeaderId = 0;
+        LeaderId = 1;
 
         candidateInfo[LeaderAddress].leaderAt = block.timestamp;
 
