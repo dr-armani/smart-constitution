@@ -15,22 +15,22 @@
 ## I. The Transitional Government (hereafter "TG") is formed as follows:
 
 <ol type="1"> 
-<li>TG shall consist of 50 Members (hereinafter “Members”).</li>
+<li>TG shall consist of 100 Members (hereinafter “Members”).</li>
 <li>Initially, three trusted neutral registrars are appointed to select a representative random sample of the population to vote.</li>
 <li>Within 4 weeks of this appointment, the neutral registrars shall randomly select 1,200 citizens to vote anonymously and elect Members.</li>
-<li>The legal birth dates of the 1,200 randomly selected voters should fall between January 1957 and December 2006 (inclusive), spanning 50 years (600 months) in total.</li>
+<li>The legal birth dates of the 1,200 randomly selected voters should fall between January 1957 and December 2006 (inclusive), spanning 100 years (600 months) in total.</li>
  <ul>   
     <li>There should be exactly two voters born in each month: one biologically male (at birth) and one biologically female (at birth).</li>
-    <li>This ensures a uniform distribution of age and gender, with exactly 50% (600 voters) biologically male and 50% (600 voters) biologically female.</li>
+    <li>This ensures a uniform distribution of age and gender, with exactly 100% (600 voters) biologically male and 100% (600 voters) biologically female.</li>
     <li>This maximizes diversity while limiting the choices for the neutral registrars.</li>
  </ul>
 <li>During this 4‑week period, any person may register as a candidate for Membership, except the three neutral registrars and their relatives cannot become candidates or Members.</li>
-<li>If, by day 28, at least 100 candidates and 1,200 voters are registered, the campaign period shall commence and last for 14 days.</li>
+<li>If, by day 28, at least 200 candidates and 1,200 voters are registered, the campaign period shall commence and last for 14 days.</li>
 <li>If these minimum thresholds for candidates or voters are not met, the registration period shall be extended until both thresholds are met.</li>
    <ul><li>Once met, the campaign period shall commence and last for 14 days.</li></ul> 
-<li>On the first day after the 14‑day campaign period, voters can vote to elect 50 Members in an open, inclusive and free election.</li>
+<li>On the first day after the 14‑day campaign period, voters can vote to elect 100 Members in an open, inclusive and free election.</li>
 <li>The election shall last 24 hours and use approval voting, allowing each voter to vote for multiple candidates.</li>
-<li>The 50 candidates who receive the most votes shall become Members and form the TG.</li>
+<li>The 100 candidates who receive the most votes shall become Members and form the TG.</li>
 <li>The Member with the most votes shall serve as the first leader and lead the TG in the first two weeks.</li>
 <li>Every two weeks, leadership shall rotate to the next most‑voted Member.</li>
     <ul><li>In case of a tie, the Member who declared candidacy earliest shall become leader first.</li></ul>
@@ -47,7 +47,7 @@
 <li>All financial transactions involving TG shall be recorded publicly on a blockchain.</li>
 <li>TG shall not amend or override any part of this Interim Constitution.</li>
 <li>Any Member may submit a proposal (hereafter "Proposal") that may include policies, decisions and financial actions.</li>
-<li>A Proposal shall be ratified upon receiving approvals from 30 Members (a supermajority).</li>
+<li>A Proposal shall be ratified upon receiving approvals from 60 Members (a supermajority).</li>
 <li>Proposals may be withdrawn by their proposer prior to ratification. Withdrawn Proposals may no longer be considered.</li>
 <li>A Proposal shall remain under consideration until ratified by the supermajority or withdrawn by the proposing Member.</li>
 <li>Each Member may have only one Proposal under consideration at a time, and may not submit a new Proposal until the prior Proposal is ratified or withdrawn.</li>
@@ -76,8 +76,8 @@
 <ol type="1"> 
 <li>Three new Neutral registrars shall be appointed to restart the process.</li>
 <li>The new Neutral registrars shall randomly select 1,200 new citizens to vote for candidates.</li>
-<li>The 1,200 new randomly selected citizens elect 50 new Members in an open, inclusive and free election.</li>
-<li>The existing TG shall be dissolved and replaced by the newly formed TG composed of 50 new Members.</li>
+<li>The 1,200 new randomly selected citizens elect 100 new Members in an open, inclusive and free election.</li>
+<li>The existing TG shall be dissolved and replaced by the newly formed TG composed of 100 new Members.</li>
 <li>If the constitutional referendum has not yet been held, the new TG shall proceed to hold the referendum following section 3.</li>
 <li>If a constitutional referendum has already been held, the new TG shall hold a new referendum following section 3. The results of this new referendum shall override any previous referendum results.</li>
 </ol>
