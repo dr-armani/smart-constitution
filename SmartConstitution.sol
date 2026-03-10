@@ -25,7 +25,7 @@ struct Candidate {
     string website;
     uint256 registeredAt;
     uint16 voteCount;
-    uint8 memberID; // 0 if not elected, Member Index if one of the 50 members
+    uint8 memberID; // 0 if not elected, Member Index if one of the 100 members
     uint256 leaderAt; // 0 if never led, otherwise the week number they led
     uint16 activeProposal; // 0 if no active proposal, otherwise proposalId
     uint16 submittedDraft; // 0 if not submitted a draft, otherwise draftlId
@@ -49,7 +49,7 @@ struct Proposal {
 contract SharedStorage {
     uint16 public constant RANDOM_VOTERS = 1200;
     uint256 public constant CAMPAIGN_DURATION = 2 weeks;
-    uint8 public constant N_MEMBERS = 50;
+    uint8 public constant N_MEMBERS = 100;
     uint256 public RegistrationEnd;
     uint256 public electionEnd;
     uint256 public referendumEnd;
@@ -64,7 +64,7 @@ contract SharedStorage {
             addedVoterCount < RANDOM_VOTERS
         ) {
             RegistrationEnd = 0;
-            // Extend registration until there are at least 100 candidates and 1200 voters
+            // Extend registration until there are at least 200 candidates and 1200 voters
             return Phase.Registration;
         } else if (RegistrationEnd == 0) {
             RegistrationEnd = block.timestamp;
@@ -336,7 +336,7 @@ contract Formation is SharedStorage {
 }
 
 contract Governance is SharedStorage {
-    uint8 public constant SUPER_MAJORITY = 30;
+    uint8 public constant SUPER_MAJORITY = 60;
     Proposal[] public proposals;
     mapping(address => mapping(uint256 => bool)) public memberVoted;
 
