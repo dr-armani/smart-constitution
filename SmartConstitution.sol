@@ -93,7 +93,7 @@ contract Formation is SharedStorage {
 
     bool public membersElected = false;
 
-    address public LeaderAddress;
+    address public leaderAddress;
     uint256 public LeaderId; // Member number of the Current Leader
     struct Demographic {
         uint16 birthYear;
@@ -306,12 +306,12 @@ contract Formation is SharedStorage {
 
         membersElected = true;
 
-        LeaderAddress = candidateList[0]; // = candidateList[candidateList.length - 1] ; Highest voted candidate
+        leaderAddress = candidateList[0]; // = candidateList[candidateList.length - 1] ; Highest voted candidate
         LeaderId = 1;
 
-        candidateInfo[LeaderAddress].leaderAt = block.timestamp;
+        candidateInfo[leaderAddress].leaderAt = block.timestamp;
 
-        emit ElectionResults(candidateList, LeaderAddress);
+        emit ElectionResults(candidateList, leaderAddress);
         return candidateList;
     }
 
@@ -321,15 +321,15 @@ contract Formation is SharedStorage {
         require(membersElected, "No leader yet");
         require(
             block.timestamp >=
-                candidateInfo[LeaderAddress].leaderAt + LEAD_PERIOD,
+                candidateInfo[leaderAddress].leaderAt + LEAD_PERIOD,
             "Current leader's term not finished"
         );
 
         LeaderId++;
-        LeaderAddress = candidateList[LeaderId];
+        leaderAddress = candidateList[LeaderId];
 
-        candidateInfo[LeaderAddress].leaderAt = block.timestamp;
-        emit LeadershipChanged(LeaderAddress);
+        candidateInfo[leaderAddress].leaderAt = block.timestamp;
+        emit LeadershipChanged(leaderAddress);
     }
 
     event LeadershipChanged(address indexed newLeader);
@@ -441,7 +441,7 @@ contract Governance is SharedStorage {
 }
 
 contract Finance is SharedStorage {
-    uint8 constant MEDIAN_MEMBER = uint8(N_MEMBERS / 2);
+    uint8 constant MEDIAN_MEMBER = uint8(N_MEMBERS / 2); 
 
     uint256 public currentRate;
     struct InterestPeriod {
