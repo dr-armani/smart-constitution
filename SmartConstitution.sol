@@ -658,16 +658,16 @@ contract Referendum is SharedStorage {
             )
         );
 
-        require(hashedOnChain == draft.hashedOffChain, "Incorrect Hash!");
+        require(hashedOnChain == draft.hashedOffChain, "Incorrect Hash!"); 
 
-        draft.submittedAt = block.timestamp;
-        draft.voteCount = 0;
+        candidateInfo[msg.sender].submittedDraft = uint16(constitutionDrafts.length); 
 
-        candidateInfo[msg.sender].submittedDraft = uint16(
-            constitutionDrafts.length
-        );
-        emit ConstitutionDraftSubmitted(constitutionDrafts.length, draft);
-        constitutionDrafts.push(draft);
+        constitutionDrafts.push(draft); 
+
+        constitutionDrafts[draftId].submittedAt = block.timestamp; 
+        constitutionDrafts[draftId].voteCount = 0; 
+
+        emit ConstitutionDraftSubmitted(constitutionDrafts.length, draft); 
     }
 
     event ConstitutionDraftSubmitted(
