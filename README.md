@@ -297,7 +297,7 @@ The constitutional framework is intended to operate through three interacting la
 | Constitutional Referendum Deadline | 14 weeks |
 | National Election Deadline | 8 weeks after referendum |
 | TG Dissolution Deadline | 2 weeks after national election |
-| Failure / Restart Deadline | 32 weeks |
+| Failure / Restart Deadline | 24 weeks |
 
 ---
 
