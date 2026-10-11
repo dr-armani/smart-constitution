@@ -1,4 +1,4 @@
-# The Interim Constitution for the Transition Period
+# The Interim Constitution for the Transition Period (Smart Constitution Implementation)
 **Designed & Developed by** Daniel Armani ([LinkedIn](https://www.linkedin.com/in/dr-armani) ••• [Website](https://www.blockcenter.org/ceo))
 
 An **Interim Constitution designed for implementation as a smart contract ("Smart Constitution")**.
